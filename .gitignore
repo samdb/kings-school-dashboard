@@ -1,0 +1,27 @@
+# Private family data: profile, synced email, local marks. Never commit.
+data/
+*.corrupt
+.tmp-*.json
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+
+# Python caches / tooling
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+
+# Editors / OS
+.DS_Store
+*.swp
+.idea/
+.vscode/
+*.log
