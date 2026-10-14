@@ -183,3 +183,30 @@ static/                index.html, app.css, app.js, favicon.svg
 tests/                 unittest suite
 data/                  (gitignored) config.json, state.json, marks.json
 ```
+
+## Published dashboard UI
+
+`pages/` contains the Pages presentation. `scripts/build_pages.py` combines it with
+reviewed summaries from the private local data and writes `docs/`. The local
+Gmail application in `static/` is separate. Do not edit generated `docs/` files alone.
+
+The published page shows confirmed clubs, official term dates and chronological
+updates. Past events are in Archive; Save and Archive use browser storage.
+Only six cards are shown initially. Personal relevance is reviewed metadata,
+not inferred from whether the final summary happens to contain the child's name.
+
+Term dates were checked on 14 October 2026 against
+https://kings-rochester.co.uk/admissions/term-dates/ . They require editorial updates.
+Email and attachment coverage is still incomplete; the redesign does not resolve it.
+
+Browser regression check (requires an existing Playwright installation):
+
+```bash
+python3 -m http.server 8876 --bind 127.0.0.1 --directory docs
+# In another terminal:
+node scripts/check_pages.cjs
+```
+
+Optional environment variables: `PLAYWRIGHT_MODULE` for a module path,
+`CHROMIUM_PATH` for an installed browser, and `KINGS_REVIEW_URL` for the deployed URL.
+Checks run in a fresh browser context.
