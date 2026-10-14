@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Family School Desk · King's School Rochester</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./app.css">
+  <script src="./demo.js" defer></script>
+  <script src="./app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#feed">Skip to emails</a>
+
+  <header class="masthead">
+    <div class="masthead__inner">
+      <div class="brand">
+        <svg class="brand__crest" viewBox="0 0 40 46" aria-hidden="true" focusable="false">
+          <path d="M3 3h34v20c0 11-8 18-17 21C11 41 3 34 3 23z" fill="currentColor"/>
+          <path d="M14 13v20M14 23l10-10M17 21l8 12" stroke="#f6f0e1" stroke-width="2.6"
+                stroke-linecap="round" fill="none"/>
+        </svg>
+        <div>
+          <p class="brand__school">King's School Rochester</p>
+          <h1 class="brand__title">The Family School Desk</h1>
+        </div>
+      </div>
+
+      <div class="status" aria-live="polite">
+        <p class="status__line">
+          <span id="connection" class="pill pill--muted">Checking…</span>
+          <span id="last-refresh" class="status__time">Last successful refresh: —</span>
+        </p>
+        <div class="status__buttons">
+          <button id="refresh-btn" type="button" class="btn btn--primary">
+            <svg aria-hidden="true" viewBox="0 0 20 20" class="icon"><path d="M16 10a6 6 0 1 1-2-4.5M16 3v4h-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span id="refresh-label">Refresh</span>
+          </button>
+          <button id="settings-btn" disabled title="Settings are available in the local app" type="button" class="btn btn--ghost" aria-haspopup="dialog">
+            <svg aria-hidden="true" viewBox="0 0 20 20" class="icon"><circle cx="10" cy="10" r="2.6" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10 2.5v2.2M10 15.3v2.2M2.5 10h2.2M15.3 10h2.2M4.7 4.7l1.6 1.6M13.7 13.7l1.6 1.6M4.7 15.3l1.6-1.6M13.7 6.3l1.6-1.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            Settings
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div id="demo-banner" class="banner banner--demo" hidden role="note">
+    <strong>Demo mode — synthetic sample content.</strong>
+    Public preview only. All names and emails are fictional. Gmail and profile settings are available only in the local app.
+  </div>
+  <div id="alerts" class="alerts" aria-live="polite"></div>
+
+  <div class="layout">
+    <nav class="tabs" role="tablist" aria-label="Views">
+      <button role="tab" id="tab-child" class="tab" data-view="child" aria-selected="true" aria-controls="feed">
+        <span class="tab__label" id="tab-child-label">For your child</span><span class="tab__count" id="count-child"></span>
+      </button>
+      <button role="tab" id="tab-year" class="tab" data-view="year" aria-selected="false" aria-controls="feed" tabindex="-1">
+        <span class="tab__label" id="tab-year-label">Year group</span><span class="tab__count" id="count-year"></span>
+      </button>
+      <button role="tab" id="tab-all" class="tab" data-view="all" aria-selected="false" aria-controls="feed" tabindex="-1">
+        <span class="tab__label">All school</span><span class="tab__count" id="count-all"></span>
+      </button>
+    </nav>
+
+    <aside class="filters" aria-label="Filters">
+      <label class="search">
+        <span class="visually-hidden">Search emails</span>
+        <svg aria-hidden="true" viewBox="0 0 20 20" class="icon"><circle cx="8.5" cy="8.5" r="5.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M13 13l4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        <input id="search" type="search" placeholder="Search subject, sender, text" autocomplete="off">
+      </label>
+
+      <fieldset class="filter-group">
+        <legend>Show</legend>
+        <label class="check"><input type="checkbox" id="f-actions"> Possible actions only</label>
+        <label class="check"><input type="checkbox" id="f-saved"> Saved only</label>
+        <label class="check"><input type="checkbox" id="f-hidden"> Include done &amp; dismissed</label>
+      </fieldset>
+
+      <fieldset class="filter-group" id="activity-group">
+        <legend>Activities you follow</legend>
+        <div id="activity-chips" class="chips"></div>
+        <p class="hint" id="activity-empty">Add activities in Settings to filter by them. A match only means the activity is mentioned — not that your child takes part.</p>
+      </fieldset>
+
+      <section class="coverage" aria-labelledby="coverage-title">
+        <h2 id="coverage-title" class="coverage__title">Sync coverage</h2>
+        <div id="coverage"></div>
+        <p class="hint">Explore sample messages using the tabs, search and activity filters.</p>
+        <p class="hint">Read-only. Attachments are not opened — use “Open in Gmail” to see them. Dates shown are when an email was received, not deadlines.</p>
+      </section>
+    </aside>
+
+    <main id="feed" class="feed" tabindex="-1" aria-busy="true">
+      <div class="state state--loading" id="loading">
+        <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
+        <p>Loading the desk…</p>
+      </div>
+    </main>
+  </div>
+
+  <footer class="footer">
+    <p>Public demo · synthetic content only · no Gmail connection. Save / done / dismiss last until you reload this page.</p>
+  </footer>
+
+  <dialog id="settings" class="dialog" aria-labelledby="settings-title">
+    <form id="settings-form" method="dialog" novalidate>
+      <header class="dialog__head">
+        <h2 id="settings-title">Settings</h2>
+        <button type="button" class="btn btn--icon" id="settings-close" aria-label="Close settings">×</button>
+      </header>
+
+      <div class="dialog__body">
+        <p id="settings-error" class="form-error" role="alert" hidden></p>
+
+        <fieldset>
+          <legend>Your child</legend>
+          <p class="hint">Your family profile stays private on this computer.</p>
+          <div class="row">
+            <label>First name
+              <input name="child_first_name" id="s-name" maxlength="40" autocomplete="off">
+            </label>
+            <label>Year group
+              <select name="year_group" id="s-year"></select>
+            </label>
+          </div>
+          <label>Activities to follow <span class="hint">(one per line, e.g. “Chess Club”)</span>
+            <textarea name="activities" id="s-activities" rows="3"></textarea>
+          </label>
+          <p class="hint">Following an activity only highlights emails that mention it as “possible relevance”. It never assumes your child is enrolled.</p>
+        </fieldset>
+
+        <fieldset>
+          <legend>Gmail (read-only)</legend>
+          <label>Accounts to read <span class="hint">(one email address per line, up to 5)</span>
+            <textarea name="accounts" id="s-accounts" rows="2" autocomplete="off" spellcheck="false"></textarea>
+          </label>
+          <label>School search query
+            <input name="query" id="s-query" spellcheck="false" autocomplete="off">
+          </label>
+          <button type="button" class="btn btn--link" id="s-query-reset">Reset to school default</button>
+          <label>Auto-refresh every (minutes)
+            <input name="refresh_minutes" id="s-minutes" type="number" min="5" max="1440" step="1" inputmode="numeric">
+          </label>
+          <p class="hint">Each account must already be signed in to the gog helper on this computer. If access expires, re-run the gog sign-in for that account (see README) and press Refresh.</p>
+        </fieldset>
+
+        <fieldset>
+          <legend>Demo</legend>
+          <label class="check"><input type="checkbox" name="demo_mode" id="s-demo"> Show synthetic sample content instead of Gmail</label>
+          <p class="hint">Sample items are clearly marked and are not real school emails.</p>
+        </fieldset>
+      </div>
+
+      <footer class="dialog__foot">
+        <button type="button" class="btn btn--ghost" id="settings-cancel">Cancel</button>
+        <button type="submit" class="btn btn--primary" id="settings-save">Save settings</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <template id="card-template">
+    <article class="card">
+      <div class="card__rule" aria-hidden="true"></div>
+      <div class="card__main">
+        <div class="card__tags"></div>
+        <h3 class="card__subject"></h3>
+        <p class="card__meta"></p>
+        <p class="card__excerpt"></p>
+        <p class="card__action" hidden></p>
+        <p class="card__attach" hidden></p>
+        <details class="card__why">
+          <summary>Why this is here</summary>
+          <ul></ul>
+        </details>
+        <div class="card__body" hidden>
+          <pre class="card__text"></pre>
+          <button type="button" class="btn btn--link card__history">Show earlier messages in thread</button>
+        </div>
+        <div class="card__buttons">
+          <a class="btn btn--small btn--primary card__open" target="_blank" rel="noopener noreferrer">Open in Gmail</a>
+          <button type="button" class="btn btn--small btn--ghost card__expand" aria-expanded="false">Read here</button>
+          <button type="button" class="btn btn--small btn--ghost card__save" aria-pressed="false">Save</button>
+          <button type="button" class="btn btn--small btn--ghost card__done" aria-pressed="false">Mark done</button>
+          <button type="button" class="btn btn--small btn--ghost card__dismiss" aria-pressed="false">Dismiss</button>
+        </div>
+      </div>
+    </article>
+  </template>
+</body>
+</html>

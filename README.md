@@ -9,6 +9,16 @@ year group, what mentions an activity you follow, and what is general school new
 - Your profile, synced emails and saved/done/dismissed marks live only in `data/`
   (gitignored, created with `0700`/`0600` permissions).
 
+## Public demo preview
+
+[Open the GitHub Pages preview](https://samdb.github.io/kings-school-dashboard/).
+It uses only fictional sample emails and a fictional profile. Filters, reading and
+save/done/dismiss work; marks reset on reload. Gmail sync and profile settings
+require the local app below. No private data is published.
+
+Rebuild the static preview after frontend changes with `python3 scripts/build_pages.py`.
+Pages serves the committed `docs/` directory on `main`. The generator does not read `data/`.
+
 ## Run it
 
 ```bash
