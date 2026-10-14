@@ -30,7 +30,7 @@
   }
 
   // ---------- API ----------
-  function api(path, body) { return window.schoolDemoApi(path, body); }
+  function api(path, body) { return window.schoolSnapshotApi(path, body); }
 
   // ---------- dates ----------
   var fmtFull = new Intl.DateTimeFormat("en-GB", {
@@ -101,6 +101,7 @@
   }
 
   function renderHeader(feed) {
+    CONNECTION.snapshot = ["pill--ok", "School updates"];
     var conn = CONNECTION[feed.connection] || CONNECTION.never_synced;
     var pill = $("connection");
     pill.className = "pill " + conn[0];
@@ -108,13 +109,14 @@
     $("last-refresh").textContent = feed.mode === "demo"
       ? "Showing synthetic sample content"
       : feed.last_successful_refresh
-        ? "Last successful refresh: " + formatDate(feed.last_successful_refresh) + " (" + relative(feed.last_successful_refresh) + ")"
+        ? "Email snapshot: " + formatDate(feed.last_successful_refresh) + " (" + relative(feed.last_successful_refresh) + ")"
         : "Last successful refresh: never";
-    $("last-refresh").title = "Auto-refresh every " + feed.refresh_minutes + " minutes while the server runs";
+    $("last-refresh").title = "Published snapshot. Reload checks for a newly published version, not new Gmail messages.";
     var running = feed.refresh && feed.refresh.running;
     setRefreshing(!!running);
     $("refresh-btn").disabled = !!running || feed.mode === "demo" || feed.connection === "not_configured";
-    $("demo-banner").hidden = feed.mode !== "demo";
+    $("demo-banner").hidden = true;
+    $("refresh-label").textContent = "Reload page";
 
     var name = feed.profile.child_first_name;
     $("tab-child-label").textContent = name ? "For " + name : "For your child";
@@ -163,6 +165,7 @@
       box.appendChild(el("p", { cls: "coverage__acct", text: "Demo mode: no Gmail data is shown." }));
       return;
     }
+    if (feed.mode === "snapshot") { box.appendChild(el("p", {text:feed.coverage_text})); return; }
     if (!feed.accounts.length) {
       box.appendChild(el("p", { cls: "coverage__acct", text: "No Gmail accounts configured." }));
       return;
@@ -358,7 +361,7 @@
     if (m.possible_actions.length) {
       var act = tpl.querySelector(".card__action");
       act.hidden = false;
-      act.appendChild(el("strong", { text: "Possible action — check email." }));
+      act.appendChild(el("strong", { text: "Check status in source email." }));
       act.appendChild(document.createTextNode(" Mentions: " + m.possible_actions.join(", ") +
         ". This is a keyword hint, not a confirmed task or deadline."));
     }

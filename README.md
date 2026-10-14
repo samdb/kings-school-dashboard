@@ -9,15 +9,26 @@ year group, what mentions an activity you follow, and what is general school new
 - Your profile, synced emails and saved/done/dismissed marks live only in `data/`
   (gitignored, created with `0700`/`0600` permissions).
 
-## Public demo preview
+## Family Pages dashboard
 
-[Open the GitHub Pages preview](https://samdb.github.io/kings-school-dashboard/).
-It uses only fictional sample emails and a fictional profile. Filters, reading and
-save/done/dismiss work; marks reset on reload. Gmail sync and profile settings
-require the local app below. No private data is published.
+[Open Blake’s School Desk](https://samdb.github.io/kings-school-dashboard/).
 
-Rebuild the static preview after frontend changes with `python3 scripts/build_pages.py`.
-Pages serves the committed `docs/` directory on `main`. The generator does not read `data/`.
+Published at Sam’s request: reviewed summaries of real school messages, a Year 3
+view, confirmed Drawing/LAMDA clubs and the later choir-place offer (acceptance
+not verified). The public URL is not access control. Raw messages, credentials,
+medical details, billing and personal access links are excluded. Gmail source
+links require the viewer’s own Gmail sign-in.
+
+This is a snapshot, not live Gmail: its timestamp and incomplete sync coverage
+are visible. Attachments have not been read. Marks persist in browser localStorage.
+To update it, review the source messages and update the explicit summary allowlist
+in `scripts/build_pages.py`, then run `python3 scripts/build_pages.py` and publish
+`docs/`. The builder reads local state but exports only allowlisted summaries.
+
+Brand asset: the school’s own logo from
+https://kings-rochester.co.uk/wp-content/uploads/2025/07/ksr-logo-1.svg .
+Palette inspected on https://kings-rochester.co.uk/ on 14 October 2026:
+navy `#181e37`, pink `#e8345b`. This family desk is not an official school service.
 
 ## Run it
 

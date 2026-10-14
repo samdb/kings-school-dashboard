@@ -275,3 +275,18 @@ code { font-size: .9em; background: var(--cream); padding: 0 .3em; border-radius
   .masthead .status, .filters, .card__buttons, .tabs { display: none; }
   body { background: #fff; }
 }
+
+/* Official site palette, inspected 14 Oct 2026: navy #181e37, pink #e8345b. */
+:root { --navy:#181e37; --navy-2:#212136; --cream:#f8f9fa; --paper:#fff; --rule:#e2e2e2; --ink:#212934; --muted:#626675; --teal:#b62246; --teal-soft:#fbe8ed; --gold:#e8345b; --gold-soft:#fbe8ed; }
+.brand__logo { width:72px; height:78px; object-fit:contain; background:white; padding:5px; border-radius:3px; }
+.family-overview { max-width:1200px; margin:0 auto; padding:2rem 1.25rem .25rem; }
+.eyebrow { font-size:.75rem; font-weight:700; letter-spacing:.16em; color:var(--teal); }
+.family-overview h2 { font:500 clamp(1.8rem,4vw,2.8rem)/1.15 var(--serif); margin:.6rem 0 1.5rem; color:var(--navy); }
+.week-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; }
+.week-grid article { padding:1.1rem 1.25rem; background:white; border:1px solid var(--rule); border-top:3px solid var(--gold); border-radius:6px; }
+.week-grid span { font-size:.7rem; letter-spacing:.08em; color:var(--muted); font-weight:700; }
+.week-grid h3 { margin:.4rem 0; font:600 1.35rem var(--serif); }
+.week-grid p { margin:.4rem 0; font-size:.9rem; }
+.family-note { padding:1rem 1.25rem; background:var(--navy); color:white; border-radius:6px; }
+.quick-links { font-size:.9rem; }
+@media(max-width:650px) { .week-grid {grid-template-columns:1fr;} .family-overview{padding-top:1rem;} .brand__logo{width:56px;height:62px;} }

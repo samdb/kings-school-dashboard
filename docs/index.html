@@ -8,7 +8,7 @@
   <title>Family School Desk · King's School Rochester</title>
   <link rel="icon" href="./favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="./app.css">
-  <script src="./demo.js" defer></script>
+  <script src="./snapshot.js" defer></script>
   <script src="./app.js" defer></script>
 </head>
 <body>
@@ -17,14 +17,10 @@
   <header class="masthead">
     <div class="masthead__inner">
       <div class="brand">
-        <svg class="brand__crest" viewBox="0 0 40 46" aria-hidden="true" focusable="false">
-          <path d="M3 3h34v20c0 11-8 18-17 21C11 41 3 34 3 23z" fill="currentColor"/>
-          <path d="M14 13v20M14 23l10-10M17 21l8 12" stroke="#f6f0e1" stroke-width="2.6"
-                stroke-linecap="round" fill="none"/>
-        </svg>
+        <img class="brand__logo" src="./school-logo.svg" alt="King’s School Rochester">
         <div>
           <p class="brand__school">King's School Rochester</p>
-          <h1 class="brand__title">The Family School Desk</h1>
+          <h1 class="brand__title">Blake’s School Desk</h1>
         </div>
       </div>
 
@@ -38,7 +34,7 @@
             <svg aria-hidden="true" viewBox="0 0 20 20" class="icon"><path d="M16 10a6 6 0 1 1-2-4.5M16 3v4h-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
             <span id="refresh-label">Refresh</span>
           </button>
-          <button id="settings-btn" disabled title="Settings are available in the local app" type="button" class="btn btn--ghost" aria-haspopup="dialog">
+          <button id="settings-btn" hidden type="button" class="btn btn--ghost" aria-haspopup="dialog">
             <svg aria-hidden="true" viewBox="0 0 20 20" class="icon"><circle cx="10" cy="10" r="2.6" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10 2.5v2.2M10 15.3v2.2M2.5 10h2.2M15.3 10h2.2M4.7 4.7l1.6 1.6M13.7 13.7l1.6 1.6M4.7 15.3l1.6-1.6M13.7 6.3l1.6-1.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
             Settings
           </button>
@@ -47,13 +43,15 @@
     </div>
   </header>
 
-  <div id="demo-banner" class="banner banner--demo" hidden role="note">
-    <strong>Demo mode — synthetic sample content.</strong>
-    Public preview only. All names and emails are fictional. Gmail and profile settings are available only in the local app.
-  </div>
+  <div id="demo-banner" hidden></div>
   <div id="alerts" class="alerts" aria-live="polite"></div>
 
-  <div class="layout">
+  <section class="family-overview" aria-label="Blake at a glance">
+<p class="eyebrow">YEAR 3 · MICHAELMAS 2026</p><h2>A good week starts here.</h2>
+<div class="week-grid"><article><span>WEDNESDAY · AFTER SCHOOL</span><h3>Guided Drawing</h3><p>Confirmed Michaelmas place.</p></article><article><span>FRIDAY · LUNCHTIME</span><h3>LAMDA</h3><p>Confirmed all-year enrolment.</p></article><article><span>TUESDAY · AFTER SCHOOL</span><h3>Pre-Prep Choir</h3><p>Place offered. Acceptance not verified.</p></article></div>
+<p class="family-note">Latest good news: Blake’s English work was recognised by Mr Fisher on 12 October.</p>
+<p class="quick-links"><a href="https://myksr.info/login" target="_blank" rel="noopener">School portal ↗</a> · <a href="https://kings-rochester.co.uk/" target="_blank" rel="noopener">School website ↗</a></p>
+</section><div class="layout">
     <nav class="tabs" role="tablist" aria-label="Views">
       <button role="tab" id="tab-child" class="tab" data-view="child" aria-selected="true" aria-controls="feed">
         <span class="tab__label" id="tab-child-label">For your child</span><span class="tab__count" id="count-child"></span>
@@ -83,13 +81,13 @@
       <fieldset class="filter-group" id="activity-group">
         <legend>Activities you follow</legend>
         <div id="activity-chips" class="chips"></div>
-        <p class="hint" id="activity-empty">Add activities in Settings to filter by them. A match only means the activity is mentioned — not that your child takes part.</p>
+        <p class="hint" id="activity-empty">Drawing and LAMDA are confirmed. Choir was offered; acceptance has not been verified.</p>
       </fieldset>
 
       <section class="coverage" aria-labelledby="coverage-title">
         <h2 id="coverage-title" class="coverage__title">Sync coverage</h2>
         <div id="coverage"></div>
-        <p class="hint">Explore sample messages using the tabs, search and activity filters.</p>
+        <p class="hint">Coverage is incomplete; source links open your signed-in Gmail.</p>
         <p class="hint">Read-only. Attachments are not opened — use “Open in Gmail” to see them. Dates shown are when an email was received, not deadlines.</p>
       </section>
     </aside>
@@ -102,9 +100,7 @@
     </main>
   </div>
 
-  <footer class="footer">
-    <p>Public demo · synthetic content only · no Gmail connection. Save / done / dismiss last until you reload this page.</p>
-  </footer>
+  <footer class="footer"><p>Family-maintained school desk · reviewed email summaries · not an official school service.<br>Save, done and dismiss stay in this browser. This is a published snapshot, not a live Gmail connection.</p></footer>
 
   <dialog id="settings" class="dialog" aria-labelledby="settings-title">
     <form id="settings-form" method="dialog" novalidate>
