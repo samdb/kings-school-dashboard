@@ -19,8 +19,10 @@ not verified). The public URL is not access control. Raw messages, credentials,
 medical details, billing and personal access links are excluded. Gmail source
 links require the viewer’s own Gmail sign-in.
 
-This is a snapshot, not live Gmail: its timestamp and incomplete sync coverage
-are visible. Attachments have not been read. Marks persist in browser localStorage.
+This is a read-only snapshot, not live Gmail. Four PDF letters and selected
+9 October newsletter image notices have been read and summarised. Other
+attachments, older newsletters and portal letters are not fully reviewed.
+There are no saved/done controls or browser marks in the published page.
 To update it, review the source messages and update the explicit summary allowlist
 in `scripts/build_pages.py`, then run `python3 scripts/build_pages.py` and publish
 `docs/`. The builder reads local state but exports only allowlisted summaries.
@@ -210,3 +212,16 @@ node scripts/check_pages.cjs
 Optional environment variables: `PLAYWRIGHT_MODULE` for a module path,
 `CHROMIUM_PATH` for an installed browser, and `KINGS_REVIEW_URL` for the deployed URL.
 Checks run in a fresh browser context.
+
+### Document reviews
+
+`scripts/reviewed_content.json` stores explicitly reviewed summaries, bullet
+points, public source links and internal evidence notes. The builder exports
+only presentation fields, not evidence notes or raw attachments. On 14 October
+2026, four PDF letters and the 9 October Harvest, Fireworks and Orchestra
+notices were read. The PSHEE image-only curriculum chart was not transcribed.
+The Principal video and portal weekly letters remain unread. Older generic
+newsletter placeholders are omitted until reviewed; omission is not a claim
+that those issues contain nothing relevant. Review future linked pages, image
+notices and PDFs before publishing relevance conclusions. Downloads stay in
+gitignored `data/`. This editorial review is not an automated attachment reader.

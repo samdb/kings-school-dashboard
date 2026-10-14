@@ -11,3 +11,5 @@
 
 /* Reading layout: information, not an inbox. */
 .card{border:0;border-bottom:1px solid var(--line);border-radius:0;background:transparent;padding:22px 0;margin:0}.card:first-child{padding-top:0}.card p{font-size:15px}.card time{font-size:12px}.card-actions{margin-top:12px}.update-note{font-size:12px;color:var(--muted);line-height:1.7}.portal{border:0;padding:0;text-decoration:underline;text-underline-offset:4px}
+
+.summary-points{padding-left:1.2rem;line-height:1.65}.summary-points li+li{margin-top:.65rem}

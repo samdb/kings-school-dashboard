@@ -24,20 +24,21 @@ SUMMARIES = {
  'c69d4079eae36bab9a21db1f': ('Michaelmas welcome letter', 'Mrs Crozer’s Michaelmas welcome letter. Read the letter in the original email.'),
  '1faa3ceffa714b82241b7a92': ('Junior School leadership opportunities', 'Junior School leadership opportunities. Read the letter in the original email.'),
 }
+REVIEWS = json.loads((ROOT/'scripts/reviewed_content.json').read_text())
 raw = Service(Env()).feed()
 assert raw['mode'] == 'live', 'Refusing to publish synthetic data'
 profile = dict(raw['profile'], activities=['Guided Drawing', 'LAMDA', 'Choir'])
 items = []
 for source in raw['items']:
     key = source['key']
-    if key in SUMMARIES:
+    review = REVIEWS.get(key)
+    if review:
+        subject, summary = review['title'], review['summary']
+    elif key in SUMMARIES:
         subject, summary = SUMMARIES[key]
-    elif source['subject'] == "King's School Rochester News" and source['received_at'] >= '2026-09':
-        subject = 'School newsletter · ' + source['received_at'][:10]
-        summary = 'The Principal’s update and school-wide news. Read the newsletter for notices and dates.'
-        if source['received_at'].startswith('2026-10-09'):
-            summary = 'Firework Night, Harvest Festival and the Principal’s update. See the newsletter for dates and event details.'
     else:
+        # Do not publish generic newsletter placeholders. Older issues need
+        # document/image review before they can supply useful summaries.
         continue
     url = urlsplit(source.get('source_url', ''))
     safe_url = urlunsplit((url.scheme, url.netloc, url.path, '', url.fragment))
@@ -45,6 +46,10 @@ for source in raw['items']:
                 received_at=source['received_at'],from_name='King’s School Rochester',
                 source_url=safe_url,attachments_skipped=source.get('attachments_skipped',0),
                 mark=dict(saved=False,done=False,dismissed=False))
+    if review:
+        item['points'] = review.get('points', [])
+        item['links'] = review.get('links', [])
+        item['reviewed_on'] = review['reviewed_on']
     item['match'] = classify(subject, summary, profile)
     # Personal relevance is reviewed metadata, not a side effect of copy wording.
     if key in {'1bfe6cad1733cbd88ba80842', '586eec97452540686c80eb60', '89c519e060d4934a0be6dd5d'}:
@@ -56,7 +61,7 @@ for source in raw['items']:
         item['match'] = dict(category='general',direct=False,year_match=False,activities=[],years_mentioned=[],possible_actions=[],reasons=[dict(kind='general',text='Whole-school newsletter; individual stories do not restrict its audience.')])
     items.append(item)
 assert items
-feed = dict(mode='snapshot',connection='snapshot',profile=profile,items=items,accounts=[],refresh={'running':False},refresh_minutes=0,last_successful_refresh=raw['last_successful_refresh'],generated_at=raw['generated_at'],coverage_text=f"{len(items)} reviewed updates from {len(raw['items'])} imported threads. 24 Victor threads were not retrieved in the last sync. Attachments have not been read. Personal medical, billing and account-access messages are not published.")
+feed = dict(mode='snapshot',connection='snapshot',profile=profile,items=items,accounts=[],refresh={'running':False},refresh_minutes=0,last_successful_refresh=raw['last_successful_refresh'],generated_at=raw['generated_at'],coverage_text=f"{len(items)} reviewed updates from {len(raw['items'])} imported threads. 24 Victor threads were not retrieved in the last sync. Four PDF letters and selected 9 October newsletter notices reviewed; remaining attachments, older newsletters, portal letters and video not reviewed. Personal medical, billing and account-access messages are not published.")
 out = ROOT/'docs'; out.mkdir(exist_ok=True)
 # Pages has its own presentation: do not rewrite the local-app UI with regexes.
 for name in ['index.html', 'app.css', 'app.js']:
