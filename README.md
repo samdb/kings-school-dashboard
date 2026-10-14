@@ -191,9 +191,9 @@ reviewed summaries from the private local data and writes `docs/`. The local
 Gmail application in `static/` is separate. Do not edit generated `docs/` files alone.
 
 The published page shows confirmed clubs, official term dates and chronological
-updates. Past events are in Archive; Save and Archive use browser storage.
-Only six cards are shown initially. Personal relevance is reviewed metadata,
-not inferred from whether the final summary happens to contain the child's name.
+updates. All current updates are visible without filters or pagination. Past events
+are omitted. The published page is read-only: no Save, Archive, task controls or
+browser storage. Source links open the original school email in Gmail.
 
 Term dates were checked on 14 October 2026 against
 https://kings-rochester.co.uk/admissions/term-dates/ . They require editorial updates.

@@ -14,15 +14,15 @@ from kingsdash.matching import classify
 SUMMARIES = {
  '1bfe6cad1733cbd88ba80842': ('English work recognised by Mr Fisher', 'Blake showed Mr Fisher an English task on 12 October. The Junior School congratulated him on the high standard of his work.'),
  '586eec97452540686c80eb60': ('Michaelmas clubs: confirmed places', 'Guided Drawing: Wednesday after school, Michaelmas term. LAMDA: Friday lunchtime, all year. Both places confirmed.'),
- '89c519e060d4934a0be6dd5d': ('Choir place offered', 'Choir offered Blake a place from Tuesday 22 September and asked for a reply. No acceptance found in the imported emails.'),
- 'b4ae119d62ce32fc74b9cde7': ('Year 3 parents’ letter · 21 September', 'Year 3 parents’ letter from the Junior Office. Attachment not yet summarised.'),
- '989658e78cff6c0a5877365a': ('PSHEE and RSHE curriculum · Years 1–6', 'PSHEE and RSHE curriculum letter for Years 1–6, including Year 3. Attachment not yet summarised.'),
- '46807aaeeb6d09e3ee1694cb': ('Allergy safety: school policy updated', 'Allergy-safety changes announced on 18 September. Updated policy, school procedures and Sodexo letter attached; not yet summarised.'),
+ '89c519e060d4934a0be6dd5d': ('Choir place offered', 'Choir offered Blake a place from Tuesday 22 September and asked for a reply. Acceptance not confirmed.'),
+ 'b4ae119d62ce32fc74b9cde7': ('Year 3 parents’ letter · 21 September', 'Year 3 parents’ letter from the Junior Office. Read the letter in the original email.'),
+ '989658e78cff6c0a5877365a': ('PSHEE and RSHE curriculum · Years 1–6', 'PSHEE and RSHE curriculum letter for Years 1–6, including Year 3. Read the letter in the original email.'),
+ '46807aaeeb6d09e3ee1694cb': ('Allergy safety: school policy updated', 'Allergy-safety changes announced on 18 September. Updated policy, school procedures and Sodexo letter are in the original email.'),
  '9c4a533071a2096b2e797a74': ('Google educational services: parental information', 'Information about additional Google educational services, including the parental opt-out.'),
  '26e2c35e83d329cb32c7bcea': ('Past event: Year 3 Roman Museum trip · 16 September', 'Consent email for the Year 3 trip to Canterbury’s Roman Museum on 16 September 2026. Event has passed.'),
  'cb47e5b23a5d8e4ee2bdd624': ('Past event: scholarship evening · 7 October', 'Scholarship evening on 7 October, including Year 4 choristerships. Event has passed.'),
- 'c69d4079eae36bab9a21db1f': ('Michaelmas welcome letter', 'Mrs Crozer’s Michaelmas welcome letter. Attachment not yet summarised.'),
- '1faa3ceffa714b82241b7a92': ('Junior School leadership opportunities', 'Junior School leadership opportunities. Attachment not yet summarised.'),
+ 'c69d4079eae36bab9a21db1f': ('Michaelmas welcome letter', 'Mrs Crozer’s Michaelmas welcome letter. Read the letter in the original email.'),
+ '1faa3ceffa714b82241b7a92': ('Junior School leadership opportunities', 'Junior School leadership opportunities. Read the letter in the original email.'),
 }
 raw = Service(Env()).feed()
 assert raw['mode'] == 'live', 'Refusing to publish synthetic data'
@@ -34,9 +34,9 @@ for source in raw['items']:
         subject, summary = SUMMARIES[key]
     elif source['subject'] == "King's School Rochester News" and source['received_at'] >= '2026-09':
         subject = 'School newsletter · ' + source['received_at'][:10]
-        summary = 'The Principal’s update and school-wide news. The newsletter has not yet been summarised; read the original for notices and dates.'
+        summary = 'The Principal’s update and school-wide news. Read the newsletter for notices and dates.'
         if source['received_at'].startswith('2026-10-09'):
-            summary = 'Firework Night, Harvest Festival and the Principal’s update. Dates and event details still need extracting from the original newsletter.'
+            summary = 'Firework Night, Harvest Festival and the Principal’s update. See the newsletter for dates and event details.'
     else:
         continue
     url = urlsplit(source.get('source_url', ''))
@@ -64,23 +64,9 @@ for name in ['index.html', 'app.css', 'app.js']:
 for name in ['favicon.svg', 'school-logo.svg']:
     (out/name).write_bytes((ROOT/'static'/name).read_bytes())
 (out/'snapshot.js').write_text('"use strict";\n(function(){\nconst feed = '+json.dumps(feed,ensure_ascii=False)+''';
-const storageKey = 'kings-family-marks-v1';
-let marks = {};
-try { marks = JSON.parse(localStorage.getItem(storageKey) || '{}'); } catch (_) {}
-feed.items.forEach(item => { if(marks[item.key]) Object.assign(item.mark, marks[item.key]); });
-window.schoolSnapshotApi = function(path, body) {
+window.schoolSnapshotApi = function(path) {
  if(path === '/api/feed') return Promise.resolve(feed);
- if(path === '/api/refresh') { location.reload(); return Promise.resolve({}); }
- if(path === '/api/marks') {
-  const item = feed.items.find(i => i.key === body.key);
-  if(!item) return Promise.reject(new Error('Unknown update'));
-  const next = Object.assign({}, item.mark, body.changes);
-  const nextMarks = Object.assign({}, marks, {[item.key]: next});
-  try { localStorage.setItem(storageKey, JSON.stringify(nextMarks)); } catch (_) { return Promise.reject(new Error('Browser storage is unavailable.')); }
-  item.mark = next; marks = nextMarks;
-  return Promise.resolve({mark:item.mark});
- }
- return Promise.reject(new Error('Manage settings in the local school desk'));
+ return Promise.reject(new Error('This is a read-only information page.'));
 };
 })();
 ''')
