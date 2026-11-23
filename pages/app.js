@@ -11,6 +11,11 @@
       time.dateTime=item.event_on;article.append(time);
     }
     article.append(node('h3','',item.subject.startsWith('School newsletter') ? 'School newsletter' : item.subject),node('p','',item.excerpt));
+    if(item.tags?.length) {
+      const tags=node('div','audience-tags');tags.setAttribute('aria-label','Who this is for');
+      item.tags.forEach(tag=>tags.append(node('span','audience-tag',tag)));
+      article.insertBefore(tags,article.querySelector('p'));
+    }
     if(item.points?.length) {
       const list=node('ul','summary-points');
       item.points.forEach(text=>list.append(node('li','',text)));article.append(list);

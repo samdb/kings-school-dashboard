@@ -2,6 +2,8 @@
 from datetime import date
 from urllib.parse import urlsplit
 
+AUDIENCE_TAGS = {'Whole school', 'Year 3', 'Blake confirmed', 'School event', 'Parents', 'Choir', 'Optional'}
+
 
 def approved_reviews(reviews):
     approved = {}
@@ -28,6 +30,7 @@ def approved_reviews(reviews):
             continue
         clean = {k: review[k] for k in ('title', 'summary', 'points', 'reviewed_on', 'expires_on', 'event_on') if k in review}
         clean['links'] = []
+        clean['tags'] = [tag for tag in review.get('tags', []) if tag in AUDIENCE_TAGS]
         for link in review.get('links', []):
             url = urlsplit(link.get('url', ''))
             if url.scheme == 'https' and url.hostname in ('kings-rochester.co.uk', 'mcusercontent.com') and not url.query and not url.username:

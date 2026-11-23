@@ -65,6 +65,7 @@ for source in source_items.values():
         item['reviewed_on'] = review['reviewed_on']
         item['expires_on'] = review.get('expires_on')
         item['event_on'] = review.get('event_on')
+        item['tags'] = review.get('tags', [])
     item['match'] = classify(subject, summary, profile)
     # Personal relevance is reviewed metadata, not a side effect of copy wording.
     if key in {'1bfe6cad1733cbd88ba80842', '586eec97452540686c80eb60', '89c519e060d4934a0be6dd5d'}:
