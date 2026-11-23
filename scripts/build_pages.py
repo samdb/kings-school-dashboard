@@ -12,6 +12,7 @@ from kingsdash.config import Env
 from kingsdash.matching import classify
 from kingsdash.storage import read_json
 from kingsdash.publication import approved_reviews, coverage_note
+from kingsdash.public_media import export_images
 
 # Explicitly reviewed summaries keyed to their source. No arbitrary email export.
 SUMMARIES = {
@@ -41,6 +42,7 @@ update_status = read_json(str(Path(env.data_dir)/'update_status.json'), {})
 assert raw['mode'] == 'live', 'Refusing to publish synthetic data'
 profile = dict(raw['profile'], activities=['Guided Drawing', 'Choir'])
 items = []
+out = ROOT/'docs'; out.mkdir(exist_ok=True)
 for source in source_items.values():
     key = source['key']
     if key in family['superseded_source_keys']:
@@ -56,8 +58,8 @@ for source in source_items.values():
         # Do not publish generic newsletter placeholders. Older issues need
         # document/image review before they can supply useful summaries.
         continue
-    # Main page is now upcoming events and reviewed grades only (Sam, 23 Nov).
-    if not review or not (review.get('event_on') or review.get('kind') == 'grade'):
+    # Main page includes upcoming events, grades and marked schoolwork (Sam, 23 Nov).
+    if not review or not (review.get('event_on') or review.get('kind') in ('grade', 'work')):
         continue
     url = urlsplit(source.get('source_url', ''))
     safe_url = urlunsplit((url.scheme, url.netloc, url.path, '', url.fragment))
@@ -73,6 +75,10 @@ for source in source_items.values():
         item['event_on'] = review.get('event_on')
         item['tags'] = review.get('tags', [])
         item['kind'] = review.get('kind', 'event')
+        if review.get('teacher_comment'):
+            item['teacher_comment'] = review['teacher_comment']
+        if review.get('images'):
+            item['images'] = export_images(review['images'], Path(env.data_dir)/'approved-images', out)
     item['match'] = classify(subject, summary, profile)
     # Personal relevance is reviewed metadata, not a side effect of copy wording.
     if key in {'1bfe6cad1733cbd88ba80842', '586eec97452540686c80eb60', '89c519e060d4934a0be6dd5d'}:
@@ -103,6 +109,12 @@ window.schoolSnapshotApi = function(path) {
 if (out/'demo.js').exists(): (out/'demo.js').unlink()
 (out/'.nojekyll').touch()
 (out/'feed.json').write_text(json.dumps(feed, ensure_ascii=False))
+# Generated media is an exact allowlist of this approved feed, never all downloads.
+used_media = {picture['src'] for item in items for picture in item.get('images', [])}
+if (out/'media').exists():
+    for image in (out/'media').iterdir():
+        if image.is_file() and 'media/'+image.name not in used_media:
+            image.unlink()
 # Version assets so a refreshed page cannot mix old presentation and new data.
 html = (out/'index.html').read_text()
 for name in ('app.css', 'app.js', 'snapshot.js', 'pwa.js'):

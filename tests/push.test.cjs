@@ -22,6 +22,14 @@ test('push endpoints reject SSRF, credentials, ports, and malformed keys',()=>{
  }
  assert.throws(()=>validateSubscription({...good,keys:{p256dh:'bad',auth:'bad'}}));
 });
+test('image and teacher-note changes notify while unchanged publications do not',()=>{
+ const state={devices:{d:{pending:{},needsSend:false}}};
+ reconcile(state,feed('a',[item('a')]),'2026-11-23');
+ const updated={...item('a'),teacher_comment:'Your child is narrating.'};
+ assert.deepEqual(reconcile(state,feed('b',[updated]),'2026-11-23'),['a']);
+ assert.deepEqual(reconcile(state,feed('c',[updated]),'2026-11-23'),[]);
+ assert.deepEqual(reconcile(state,feed('d',[{...updated,images:[{src:'media/'+ 'a'.repeat(64)+'.png'}]}]),'2026-11-23'),['a']);
+});
 async function fixture(t) {
  const root=fs.mkdtempSync(path.join(os.tmpdir(),'school-push-test-'));const docs=path.join(root,'docs');fs.mkdirSync(docs);
  fs.writeFileSync(path.join(docs,'index.html'),'public');const update=value=>fs.writeFileSync(path.join(docs,'feed.json'),JSON.stringify(value));update(feed('a',[item('a')]));
@@ -57,6 +65,16 @@ test('retry state persists, retry succeeds, expired subscriptions removed',async
  const saved=JSON.parse(fs.readFileSync(path.join(f.root,'private/state.json')));assert.equal(Object.values(saved.devices)[0].needsSend,true);
  d.nextAttempt=0;f.setFail(null);await f.app.tick();assert.equal(f.sent.length,1);assert.equal(d.needsSend,false);
  f.setFail({statusCode:410});f.update(feed('c',[item('a'),item('b'),item('c')]));await f.app.tick();assert.equal(Object.keys(f.app.state.devices).length,0);
+});
+test('only images referenced by the current approved feed are served',async t=>{
+ const f=await fixture(t);const name='media/'+ 'a'.repeat(64)+'.png';
+ fs.mkdirSync(path.join(f.root,'docs/media'));fs.writeFileSync(path.join(f.root,'docs',name),'approved');
+ assert.equal((await f.request(name)).status,404);
+ f.update(feed('b',[{...item('a'),images:[{src:name}]}]));
+ const response=await f.request(name);assert.equal(response.status,200);assert.equal(response.headers.get('content-type'),'image/png');
+ assert.equal((await f.request('media/'+ 'b'.repeat(64)+'.png')).status,404);
+ assert.equal((await f.request('media/%2e%2e/data/reviews.json')).status,404);
+ f.update(feed('c',[item('a')]));assert.equal((await f.request(name)).status,404);
 });
 test('same browser can recover session; knowing endpoint without correct keys cannot take over',async t=>{
  const f=await fixture(t);const response=await f.request('api/subscribe',{subscription:f.subscription});assert.equal(response.status,200);assert.equal(Object.keys(f.app.state.devices).length,1);

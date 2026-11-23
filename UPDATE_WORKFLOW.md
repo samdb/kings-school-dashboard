@@ -36,8 +36,9 @@ children's names. Record incomplete image/homework reviews as incomplete.
 
 Initial verified batch: Nativity narrator/costume post of 23 November 11:40 and
 Blake's 19 November spelling image (4/5 “Good!”, 5/5 “Fab!”, “busily” corrected).
-19 and 23 November whiteboard images have ticks but no explicit grade: reviewed,
-not graded. The nine initially visible posts are indexed privately in sources.json;
+19 and 23 November whiteboard images have ticks but no explicit grade: publish as
+kind=work, not a numerical grade. Sam explicitly requested these work images in
+lightboxes; this supersedes the earlier exclusion of no-score samples. The nine initially visible posts are indexed privately in sources.json;
 the two homework images, older posts below Show More and historical grades remain
 unreviewed. Do not claim a full import or scheduled success from this first batch.
 
@@ -54,7 +55,7 @@ truncation and incomplete source reviews explicitly; do not infer no relevance.
 
 ## Current presentation and family facts (Sam, 23 November 2026)
 
-Main page: upcoming events and reviewed grades only. Keep undated policies and
+Main page: upcoming events and reviewed schoolwork/grades, including marked work without a score. Keep undated policies and
 club enrolment history in the underlying records, not the main feed. Sam confirmed
 Tuesday choir and ended Friday LAMDA; `scripts/family_updates.json` takes precedence
 over old school emails. Do not reintroduce the unconfirmed choir-offer card.
@@ -64,8 +65,9 @@ reading the original Seesaw image, record a grade review using `kind: "grade"`,
 `child: "Blake"`, and all the ordinary review/evidence/source-check fields below.
 Add a corresponding private source entry with key and received_at to sources.json.
 Use only an accurate transcription/summary; flag unclear handwriting, and retain
-original images privately. Never publish other children’s information, private
-access links, medical/billing data or raw schoolwork. If not signed in, say grades
+originals privately as evidence. Sam subsequently authorised checked work images
+on the public page in lightboxes. Never publish other children’s information, private
+access links, classroom sign-in QR codes or medical/billing data. If not signed in, say grades
 have not been reviewed, not that none exist.
 
 Year 3 is included in Pre-Preparatory notices; do not confuse its events with older
@@ -104,10 +106,38 @@ medical/billing/account access/other personal material that must not be publishe
 `expires_on` is optional for ongoing information; never invent an expiry/deadline.
 Use atomic writes with `kingsdash.storage.write_json_atomic` and preserve other keys.
 
-The site is PUBLIC. Export only approved family-facing summaries of school
-arrangements and Blake’s checked grades as authorised by Sam on 23 November. No raw email, account addresses,
+The site is PUBLIC. Export approved family-facing summaries of school arrangements,
+Blake’s checked grades and individually reviewed schoolwork images, as authorised
+by Sam on 23 November. No raw email, account addresses,
 private URLs/tokens, medical/billing details, or information about other children.
 Keep evidence/checks/downloads private. Do not add generic empty newsletter cards.
+
+## Work images and teacher notes (Sam’s follow-up, 23 November)
+
+Keep marked work with ticks even without an explicit score. Use `kind: "work"`,
+`child: "Blake"`; use `kind: "grade"` only for explicit marks. Do not invent a score
+or transcribe unclear arithmetic. Keep work/grades separate from upcoming events.
+
+For each image, visually check the full original and the publication copy. Put only
+approved copies in private `data/approved-images/`. Preserve the untouched original
+and source context under `data/documents/seesaw/`. Exclude other children, private
+codes/links and unrelated personal information. A work-only document detail may
+omit surrounding classroom sign-in QR codes; never alter handwriting or marks.
+Record the omission in evidence and label the image as a detail.
+
+A review’s `images` list contains `{ "file": "safe-local-name.jpg", "alt": "Useful
+image description", "caption": "Source-backed caption", "public_safe": true }`.
+Use jpg/png/webp only. `approved_reviews` checks per-image approval and Blake scope;
+the builder copies only nominated assets with content-hashed names to `docs/media/`.
+The app serves only images referenced in its current approved feed. Include generated
+`docs/media/` files in the intended commit, never the private data directory.
+
+When a teacher’s message establishes an event, store explicit `event_on`, its
+arrangements/deadlines in summary/points, and the relevant exact `teacher_comment`
+on that same review. Preserve source identity and posted date. Don’t leave the
+comment solely in a schoolwork entry or create a duplicate event. An undated comment
+cannot acquire an invented event date. Blake’s 10 December Nativity is the first
+example, with his narrator role and optional costume deadline on 4 December.
 
 ## 3. Build, check, publish
 

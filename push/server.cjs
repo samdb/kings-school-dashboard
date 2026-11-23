@@ -16,7 +16,9 @@ function versions(feed, today=new Date().toLocaleDateString('en-CA',{timeZone:'E
   const result={};
   for(const item of feed.items) {
     if(item.subject.startsWith('Past event:') || item.expires_on && item.expires_on<today || item.event_on && item.event_on<today) continue;
-    result[item.key]=sha(JSON.stringify([item.subject,item.excerpt,item.points||[],item.event_on||null,item.tags||[],item.links||[]]));
+    const fields=[item.subject,item.excerpt,item.points||[],item.event_on||null,item.tags||[],item.links||[]];
+    if(item.images?.length || item.teacher_comment) fields.push(item.images||[],item.teacher_comment||'');
+    result[item.key]=sha(JSON.stringify(fields));
   }
   return result;
 }
@@ -88,7 +90,7 @@ function createApp(options={}) {
     for(const [k,v] of limit) if(v.until<now) limit.delete(k);
     const v=limit.get(key)||{n:0,until:now+3600000};v.n++;limit.set(key,v);return v.n>max;
   }
-  const types={'.html':'text/html; charset=utf-8','.js':'application/javascript; charset=utf-8','.json':'application/json','.css':'text/css; charset=utf-8','.svg':'image/svg+xml','.png':'image/png','.webmanifest':'application/manifest+json'};
+  const types={'.html':'text/html; charset=utf-8','.js':'application/javascript; charset=utf-8','.json':'application/json','.css':'text/css; charset=utf-8','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp','.webmanifest':'application/manifest+json'};
   const files=new Set(['index.html','app.css','app.js','snapshot.js','pwa.js','sw.js','manifest.webmanifest','feed.json','favicon.svg','school-logo.svg','icon-192.png','icon-512.png','apple-touch-icon.png']);
   async function body(req) {
     let buffer='';
@@ -108,7 +110,9 @@ function createApp(options={}) {
       const route=url.pathname.slice(prefix.length);
       if(!route.startsWith('api/')) {
         if(!['GET','HEAD'].includes(req.method)) return reply(405,{error:'Method not allowed'});
-        const name=route||'index.html';if(!files.has(name)) return reply(404,{error:'Not found'});
+        const name=route||'index.html';
+        const approvedImage=/^media\/[a-f0-9]{64}\.(jpg|png|webp)$/.test(name) && readFeed().items.some(item=>(item.images||[]).some(image=>image.src===name));
+        if(!files.has(name) && !approvedImage) return reply(404,{error:'Not found'});
         const content=fs.readFileSync(path.join(docs,name));
         res.writeHead(200,{'Content-Type':types[path.extname(name)]||'application/octet-stream'});
         return res.end(req.method==='HEAD'?undefined:content);

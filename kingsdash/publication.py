@@ -1,5 +1,6 @@
 """Fail-closed export of human/agent reviewed presentation fields only."""
 from datetime import date
+import re
 from urllib.parse import urlsplit
 
 AUDIENCE_TAGS = {'Whole school', 'Year 3', 'Blake confirmed', 'School event', 'Parents', 'Choir', 'Optional'}
@@ -29,11 +30,22 @@ def approved_reviews(reviews):
         if not isinstance(review.get('points', []), list) or not all(isinstance(p, str) for p in review.get('points', [])):
             continue
         clean = {k: review[k] for k in ('title', 'summary', 'points', 'reviewed_on', 'expires_on', 'event_on') if k in review}
-        if review.get('kind') == 'grade':
-            # Sam authorised Blake's reviewed grades on the main page, 23 Nov.
+        if review.get('kind') in ('grade', 'work'):
+            # Sam authorised Blake's reviewed grades, marked work and images, 23 Nov.
             if review.get('child') != 'Blake':
                 continue
-            clean['kind'] = 'grade'
+            clean['kind'] = review['kind']
+        if isinstance(review.get('teacher_comment'), str) and review['teacher_comment'].strip():
+            clean['teacher_comment'] = review['teacher_comment'].strip()
+        clean['images'] = []
+        for picture in review.get('images', []):
+            if not isinstance(picture, dict) or picture.get('public_safe') is not True:
+                continue
+            if review.get('child') != 'Blake' or not re.fullmatch(r'[a-z0-9][a-z0-9_.-]*\.(?:jpg|png|webp)', picture.get('file', '')):
+                continue
+            if not isinstance(picture.get('alt'), str) or not picture['alt'].strip():
+                continue
+            clean['images'].append({'file': picture['file'], 'alt': picture['alt'], 'caption': picture.get('caption', '') if isinstance(picture.get('caption', ''), str) else ''})
         clean['links'] = []
         clean['tags'] = [tag for tag in review.get('tags', []) if tag in AUDIENCE_TAGS]
         for link in review.get('links', []):

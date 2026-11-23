@@ -19,17 +19,19 @@ Screen. Open its new icon, find “On your iPhone”, tap **Enable notifications
 allow the system prompt. **Send a test notification** verifies real-device delivery.
 This last device step cannot be verified by server tests alone.
 
-The main page contains **upcoming events and reviewed grades only**, as requested
+The main page contains **upcoming events, reviewed schoolwork and grades**, as requested
 by Sam on 23 November. Seesaw family access is established and the first checked
 spelling results are published; historical grades and other posts still need review.
 Regular clubs and general policy notices are no longer shown. Sam’s current club
 corrections remain in `scripts/family_updates.json`: Friday LAMDA ended; choir is
 confirmed on Tuesdays. Do not overwrite these with the older enrolment/offer emails.
 
-The page is public. Sam explicitly authorised Blake’s reviewed grades on the main
-page on 23 November. Publish only checked transcriptions/summaries for Blake, not
-raw mail, original schoolwork images, other children’s information, medical or
-billing details, credentials, or private access links. Keep source evidence private.
+The page is public. Sam explicitly authorised Blake’s reviewed grades and work images on the main
+page on 23 November. Publish checked transcriptions/summaries and images for Blake, not
+raw mail, other children’s information, medical or billing details, credentials,
+classroom sign-in codes or private access links. Sam subsequently authorised checked
+schoolwork images, including work with ticks but no score; these open in accessible
+lightboxes. Only individually approved images enter the public media allowlist. Keep source evidence private.
 
 The app uses the existing server and the open-source `web-push` package, without
 paid services or third-party analytics. Push text is generic (no grades or names).

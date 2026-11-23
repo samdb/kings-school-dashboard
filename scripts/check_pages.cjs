@@ -16,9 +16,9 @@ const assert = require('node:assert/strict');
     await page.waitForSelector('.card');
     const initialCount = await page.locator('.card').count();
     assert(initialCount > 0);
-    assert.equal(await page.locator('#updates button, #updates input, #updates select, #updates details').count(), 0);
+    assert.equal(await page.locator('#updates button:not(.work-image), #updates input, #updates select, #updates details').count(), 0);
     assert.equal(await page.locator('.schedule, .choir, #information').count(), 0);
-    assert.equal(await page.locator('#grades-title').innerText(), 'Grades');
+    assert.equal(await page.locator('#grades-title').innerText(), 'Schoolwork & grades');
     const manifest=await (await page.request.get(new URL('./manifest.webmanifest',page.url()).href)).json();
     assert.equal(manifest.display,'standalone');
     assert.equal(manifest.scope,'./');
@@ -43,6 +43,20 @@ const assert = require('node:assert/strict');
       await page.setViewportSize({ width, height: 844 });
       assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'overflow at ' + width);
     }
+    const imageButton=page.locator('.work-image').first();
+    if(await imageButton.count()) {
+      await imageButton.click();
+      const dialog=page.getByRole('dialog');
+      await dialog.waitFor({state:'visible'});
+      assert(await dialog.locator('img').evaluate(img=>img.complete&&img.naturalWidth>0));
+      assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'dialog overflow');
+      await dialog.getByRole('button',{name:'Zoom in',exact:true}).click();
+      assert.equal(await dialog.getByRole('button',{name:'Fit image',exact:true}).getAttribute('aria-pressed'),'true');
+      await page.screenshot({path:'/tmp/kings-work-lightbox-mobile.png'});
+      await page.keyboard.press('Escape');await dialog.waitFor({state:'hidden'});
+      assert(await imageButton.evaluate(el=>document.activeElement===el),'focus returns to image');
+      await imageButton.click();await dialog.getByRole('button',{name:'Close',exact:true}).click();await dialog.waitFor({state:'hidden'});
+    }
     await page.setViewportSize({width:1440,height:1000});
     await page.screenshot({path:'/tmp/kings-info-desktop.png'});
     await page.setViewportSize({width:390,height:844});
@@ -58,13 +72,14 @@ const assert = require('node:assert/strict');
         {key:'later',subject:'Later event',event_on:'2026-12-03',received_at:'2026-11-23',excerpt:'Later'},
         {key:'undated',subject:'School policy',expires_on:'2027-01-01',received_at:'2026-11-22',excerpt:'Undated'},
         {key:'grade',kind:'grade',subject:'Spelling result',received_at:'2026-11-22',excerpt:'Synthetic grade'},
+        {key:'work',kind:'work',subject:'Marked maths work',received_at:'2026-11-23',excerpt:'Ticks, no numerical score'},
         {key:'today',subject:'Today event',event_on:'2026-12-01',received_at:'2026-11-01',excerpt:'Today'},
         {key:'past',subject:'Past event without expiry',event_on:'2026-11-30',received_at:'2026-11-23',excerpt:'Past'}
       ]})+');'}));
     await fixture.goto(process.env.KINGS_REVIEW_URL || 'http://127.0.0.1:8876/');
     await fixture.waitForSelector('#feed .card');
     assert.deepEqual(await fixture.locator('#feed .card').evaluateAll(cards=>cards.map(c=>c.dataset.key)),['today','later']);
-    assert.deepEqual(await fixture.locator('#grades-feed .card').evaluateAll(cards=>cards.map(c=>c.dataset.key)),['grade']);
+    assert.deepEqual(await fixture.locator('#grades-feed .card').evaluateAll(cards=>cards.map(c=>c.dataset.key)),['work','grade']);
     assert.equal(await fixture.locator('[data-key=undated]').count(),0);
     assert.equal(await fixture.locator('[data-key="past"]').count(),0);
     await fixture.clock.fastForward(120000);
@@ -73,7 +88,7 @@ const assert = require('node:assert/strict');
     assert.deepEqual(await fixture.locator('#feed .card').evaluateAll(cards=>cards.map(c=>c.dataset.key)),['later']);
     await fixture.close();
     assert.deepEqual(errors, []);
-    console.log('Passed: event-date order, date rollover, grades-only separation and PWA manifest, receipt footnotes, read-only presentation, old marks ignored, logo, and 4 viewport widths.');
+    console.log('Passed: event-date order, date rollover, schoolwork/grade separation, image lightbox zoom/close/focus, PWA manifest, source footnotes, old marks ignored, logo and 4 viewport widths.');
   } finally {
     await browser.close();
   }

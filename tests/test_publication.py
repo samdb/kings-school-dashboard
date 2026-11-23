@@ -41,3 +41,15 @@ class PublicationTests(unittest.TestCase):
         self.assertEqual(approved_reviews({'key':r})['key']['kind'], 'grade')
         self.assertEqual(approved_reviews({'key':dict(r, child='Another child')}), {})
         self.assertEqual(approved_reviews({'key':dict(r, status='incomplete')}), {})
+
+    def test_work_images_require_individual_approval_and_safe_local_names(self):
+        image = dict(file='maths.png', alt='Blake maths work', public_safe=True)
+        r = dict(self.review(), kind='work', child='Blake', images=[image], teacher_comment='Your child is narrating.')
+        out = approved_reviews({'key':r})['key']
+        self.assertEqual(out['kind'], 'work')
+        self.assertEqual(out['teacher_comment'], r['teacher_comment'])
+        self.assertEqual(out['images'][0]['file'], 'maths.png')
+        for changes in ({'public_safe':False}, {'file':'../private.png'}, {'file':'https://seesaw.me/a.jpg'}, {'alt':''}):
+            candidate = dict(r, images=[dict(image, **changes)])
+            self.assertEqual(approved_reviews({'key':candidate})['key']['images'], [])
+        self.assertEqual(approved_reviews({'key':dict(r, child='Another child')}), {})

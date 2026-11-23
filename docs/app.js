@@ -4,6 +4,23 @@
   const dateFormat = new Intl.DateTimeFormat('en-GB', {day:'numeric',month:'short',year:'numeric',timeZone:'Europe/London'});
   const eventFormat = new Intl.DateTimeFormat('en-GB', {weekday:'long',day:'numeric',month:'long',timeZone:'Europe/London'});
   function node(tag, cls, text) {const e=document.createElement(tag);if(cls)e.className=cls;if(text)e.textContent=text;return e;}
+  const lightbox=node('dialog','work-lightbox');lightbox.setAttribute('aria-labelledby','work-image-title');
+  const lightboxTitle=node('h2','','Schoolwork');lightboxTitle.id='work-image-title';
+  const close=node('button','lightbox-close','Close');close.type='button';close.autofocus=true;
+  const zoom=node('button','lightbox-zoom','Zoom in');zoom.type='button';zoom.setAttribute('aria-pressed','false');
+  const tools=node('div','lightbox-tools');tools.append(lightboxTitle,zoom,close);
+  const stage=node('div','lightbox-stage');const fullImage=node('img');stage.append(fullImage);
+  const caption=node('p','lightbox-caption');lightbox.append(tools,stage,caption);document.body.append(lightbox);
+  let imageOpener;
+  close.addEventListener('click',()=>lightbox.close());
+  lightbox.addEventListener('click',event=>{if(event.target===lightbox){const r=lightbox.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)lightbox.close();}});
+  zoom.addEventListener('click',()=>{const enlarged=stage.classList.toggle('is-zoomed');zoom.textContent=enlarged?'Fit image':'Zoom in';zoom.setAttribute('aria-pressed',String(enlarged));stage.scrollLeft=enlarged?(stage.scrollWidth-stage.clientWidth)/2:0;stage.scrollTop=enlarged?(stage.scrollHeight-stage.clientHeight)/2:0;});
+  lightbox.addEventListener('close',()=>{document.documentElement.classList.remove('lightbox-open');fullImage.removeAttribute('src');imageOpener?.focus({preventScroll:true});});
+  function openImage(picture,title,opener) {
+    imageOpener=opener;lightboxTitle.textContent=title;fullImage.src='./'+picture.src;fullImage.alt=picture.alt;
+    caption.textContent=picture.caption||picture.alt;stage.classList.remove('is-zoomed');stage.scrollTop=stage.scrollLeft=0;zoom.textContent='Zoom in';zoom.setAttribute('aria-pressed','false');
+    lightbox.showModal();document.documentElement.classList.add('lightbox-open');
+  }
   function card(item) {
     const article=node('article','card');article.dataset.key=item.key;
     if(item.event_on) {
@@ -19,6 +36,19 @@
     if(item.points?.length) {
       const list=node('ul','summary-points');
       item.points.forEach(text=>list.append(node('li','',text)));article.append(list);
+    }
+    if(item.teacher_comment) {
+      const comment=node('blockquote','teacher-comment');comment.append(node('span','teacher-comment-label','Teacher’s note'),node('p','',item.teacher_comment));article.append(comment);
+    }
+    if(item.images?.length) {
+      const gallery=node('div','work-images');
+      for(const picture of item.images) {
+        if(!/^media\/[a-f0-9]{64}\.(jpg|png|webp)$/.test(picture.src||''))continue;
+        const button=node('button','work-image');button.type='button';button.setAttribute('aria-label','Enlarge image: '+picture.alt);
+        const image=node('img');image.src='./'+picture.src;image.alt=picture.alt;image.loading='lazy';image.decoding='async';
+        button.append(image,node('span','','View image ↗'));button.addEventListener('click',()=>openImage(picture,item.subject,button));gallery.append(button);
+      }
+      article.append(gallery);
     }
     for(const link of item.links||[]) {
       if(!/^https:\/\/(kings-rochester\.co\.uk|mcusercontent\.com)\//.test(link.url))continue;
@@ -42,12 +72,12 @@
   window.schoolSnapshotApi('/api/feed').then(feed=>{
     const today=new Date().toLocaleDateString('en-CA',{timeZone:'Europe/London'});
     const items=feed.items.filter(item=>!item.subject.startsWith('Past event:') && (!item.expires_on || item.expires_on>=today) && (!item.event_on || item.event_on>=today));
-    const upcoming=items.filter(item=>item.event_on && item.kind !== 'grade').sort((a,b)=>a.event_on.localeCompare(b.event_on)||a.subject.localeCompare(b.subject));
-    const grades=items.filter(item=>item.kind==='grade').sort((a,b)=>b.received_at.localeCompare(a.received_at));
+    const upcoming=items.filter(item=>item.event_on && !['grade','work'].includes(item.kind)).sort((a,b)=>a.event_on.localeCompare(b.event_on)||a.subject.localeCompare(b.subject));
+    const grades=items.filter(item=>['grade','work'].includes(item.kind)).sort((a,b)=>b.received_at.localeCompare(a.received_at));
     document.getElementById('coverage-note').textContent=feed.coverage_text;
     document.getElementById('result-count').textContent='';
     document.getElementById('feed').replaceChildren(...(upcoming.length ? upcoming.map(card) : [node('p','update-note','No upcoming dated notices have been reviewed yet.')]));
-    document.getElementById('grades-feed').replaceChildren(...(grades.length ? grades.map(card) : [node('p','update-note','No grades have been reviewed yet.')]));
+    document.getElementById('grades-feed').replaceChildren(...(grades.length ? grades.map(card) : [node('p','update-note','No schoolwork or grades have been reviewed yet.')]));
     document.getElementById('snapshot-date').textContent='Updated '+dateFormat.format(new Date(feed.generated_at))+'.';
     window.schoolRenderedRevision=feed.revision;
     window.dispatchEvent(new Event('school-rendered'));
