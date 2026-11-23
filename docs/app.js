@@ -1,4 +1,4 @@
-/* Read-only school information. No saved state or task controls. */
+/* Read-only school information. Notification acknowledgement never hides cards. */
 (function () {
   'use strict';
   const dateFormat = new Intl.DateTimeFormat('en-GB', {day:'numeric',month:'short',year:'numeric',timeZone:'Europe/London'});
@@ -38,15 +38,15 @@
   window.schoolSnapshotApi('/api/feed').then(feed=>{
     const today=new Date().toLocaleDateString('en-CA',{timeZone:'Europe/London'});
     const items=feed.items.filter(item=>!item.subject.startsWith('Past event:') && (!item.expires_on || item.expires_on>=today) && (!item.event_on || item.event_on>=today));
-    const upcoming=items.filter(item=>item.event_on).sort((a,b)=>a.event_on.localeCompare(b.event_on)||a.subject.localeCompare(b.subject));
-    const information=items.filter(item=>!item.event_on).sort((a,b)=>a.subject.localeCompare(b.subject));
+    const upcoming=items.filter(item=>item.event_on && item.kind !== 'grade').sort((a,b)=>a.event_on.localeCompare(b.event_on)||a.subject.localeCompare(b.subject));
+    const grades=items.filter(item=>item.kind==='grade').sort((a,b)=>b.received_at.localeCompare(a.received_at));
     document.getElementById('coverage-note').textContent=feed.coverage_text;
     document.getElementById('result-count').textContent='';
     document.getElementById('feed').replaceChildren(...(upcoming.length ? upcoming.map(card) : [node('p','update-note','No upcoming dated notices have been reviewed yet.')]));
-    document.getElementById('information-feed').replaceChildren(...information.map(card));
-    document.getElementById('information').hidden=!information.length;
+    if(grades.length) document.getElementById('grades-feed').replaceChildren(...grades.map(card));
     document.getElementById('snapshot-date').textContent='Updated '+dateFormat.format(new Date(feed.generated_at))+'.';
-    const choir=feed.items.find(i=>i.key==='89c519e060d4934a0be6dd5d');
-    if(choir&&/^https:\/\/mail\.google\.com\//.test(choir.source_url||'')){const link=document.getElementById('choir-source');link.href=choir.source_url;link.hidden=false;}
+    window.schoolRenderedRevision=feed.revision;
+    window.dispatchEvent(new Event('school-rendered'));
+
   }).catch(()=>{document.getElementById('feed').textContent='School updates could not load.';});
 })();

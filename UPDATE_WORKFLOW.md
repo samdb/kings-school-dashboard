@@ -27,9 +27,25 @@ account-management or action links. Exclude tracking pixels/logos/social navigat
 with a recorded reason. Record blocked portal pages, videos, unavailable documents,
 truncation and incomplete source reviews explicitly; do not infer no relevance.
 
+## Current presentation and family facts (Sam, 23 November 2026)
+
+Main page: upcoming events and reviewed grades only. Keep undated policies and
+club enrolment history in the underlying records, not the main feed. Sam confirmed
+Tuesday choir and ended Friday LAMDA; `scripts/family_updates.json` takes precedence
+over old school emails. Do not reintroduce the unconfirmed choir-offer card.
+
+Sam explicitly authorised Blake’s checked grades on the public main page. After
+reading the original Seesaw image, record a grade review using `kind: "grade"`,
+`child: "Blake"`, and all the ordinary review/evidence/source-check fields below.
+Add a corresponding private source entry with key and received_at to sources.json.
+Use only an accurate transcription/summary; flag unclear handwriting, and retain
+original images privately. Never publish other children’s information, private
+access links, medical/billing data or raw schoolwork. If not signed in, say grades
+have not been reviewed, not that none exist.
+
 Year 3 is included in Pre-Preparatory notices; do not confuse its events with older
 pupils' events. Guided Drawing and LAMDA are confirmed in the existing evidence;
-Choir is only an offer unless a later message confirms acceptance. Never infer
+Tuesday Choir is confirmed directly by Sam on 23 November; Friday LAMDA is no longer current. Never infer
 attendance, completion, payment, or acceptance. Extract exact dates, times, venues,
 arrangements, requested actions and genuine deadlines. Use current Europe/London
 date. Expire event-only updates after the last relevant event; retain ongoing policies.
@@ -64,7 +80,7 @@ medical/billing/account access/other personal material that must not be publishe
 Use atomic writes with `kingsdash.storage.write_json_atomic` and preserve other keys.
 
 The site is PUBLIC. Export only approved family-facing summaries of school
-arrangements in the existing authorised scope. No raw email, account addresses,
+arrangements and Blake’s checked grades as authorised by Sam on 23 November. No raw email, account addresses,
 private URLs/tokens, medical/billing details, or information about other children.
 Keep evidence/checks/downloads private. Do not add generic empty newsletter cards.
 
@@ -78,6 +94,17 @@ Run `python3 -m unittest discover -s tests -t .` for code changes. Review the ge
 snapshot fields/diff for privacy and correct dates, and spot-check a summary against
 its source. Keep the page informational, without app controls or diagnostics.
 `data/` is ignored; NEVER stage it or use `git add -f`.
+
+After the build and checks, run `python3 scripts/publish_app.py` to atomically
+publish the Home Screen app at https://agents.victorgroup.co.uk/school/ . Fetch its
+`feed.json` and compare bytes with `docs/feed.json` before claiming the app updated.
+The running `kings-school-app` service detects new/changed published items within
+one minute and sends generic push notifications to opted-in devices, updating
+badges. It deduplicates by content, not build timestamp. Do not send a second push
+from this automation or create a duplicate review schedule. The app publication is
+independent of GitHub; if GitHub fails, still publish and verify the app, and report
+the mirror failure precisely. Do not rebuild/delete the private VAPID/subscription
+store at /var/lib/kings-school-push.
 
 Commit only intended changes (typically docs and authorised template edits), then
 push the existing `main` branch to the existing repository. GitHub CLI is authenticated;

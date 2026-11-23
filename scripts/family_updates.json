@@ -1,0 +1,10 @@
+{
+  "confirmed_on": "2026-11-23",
+  "source": "Sam's direct correction in chat on 23 November 2026",
+  "clubs": [
+    {"day": "TUE", "name": "Choir", "detail": "Confirmed by Sam · 23 November"},
+    {"day": "WED", "name": "Guided Drawing", "detail": "After school · Michaelmas"}
+  ],
+  "superseded_source_keys": ["586eec97452540686c80eb60", "89c519e060d4934a0be6dd5d"],
+  "corrections": "Friday LAMDA is no longer current. Tuesday choir participation is confirmed by Sam; time not supplied."
+}

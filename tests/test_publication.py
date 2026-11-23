@@ -35,3 +35,9 @@ class PublicationTests(unittest.TestCase):
         self.assertNotIn('every four hours', coverage_note({}))
         self.assertIn('awaiting review', coverage_note({'mail_ok':True, 'pending_threads':2}))
         self.assertIn('awaiting review', coverage_note({'mail_ok':True, 'errors':[{'kind':'auth'}]}))
+
+    def test_grade_publication_is_scoped_to_blake_and_reviewed_sources(self):
+        r = dict(self.review(), kind='grade', child='Blake')
+        self.assertEqual(approved_reviews({'key':r})['key']['kind'], 'grade')
+        self.assertEqual(approved_reviews({'key':dict(r, child='Another child')}), {})
+        self.assertEqual(approved_reviews({'key':dict(r, status='incomplete')}), {})

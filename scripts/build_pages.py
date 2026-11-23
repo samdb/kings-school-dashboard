@@ -28,6 +28,7 @@ SUMMARIES = {
  '1faa3ceffa714b82241b7a92': ('Junior School leadership opportunities', 'Junior School leadership opportunities. Read the letter in the original email.'),
 }
 REVIEWS = json.loads((ROOT/'scripts/reviewed_content.json').read_text())
+family = json.loads((ROOT/'scripts/family_updates.json').read_text())
 env = Env()
 raw = Service(env).feed()
 private_reviews = read_json(str(Path(env.data_dir)/'reviews.json'), {})
@@ -38,10 +39,12 @@ source_items = {s['key']: s for s in raw['items']}
 source_items.update(extra_sources)
 update_status = read_json(str(Path(env.data_dir)/'update_status.json'), {})
 assert raw['mode'] == 'live', 'Refusing to publish synthetic data'
-profile = dict(raw['profile'], activities=['Guided Drawing', 'LAMDA', 'Choir'])
+profile = dict(raw['profile'], activities=['Guided Drawing', 'Choir'])
 items = []
 for source in source_items.values():
     key = source['key']
+    if key in family['superseded_source_keys']:
+        continue
     if key in private_reviews and key not in approved:
         continue
     review = REVIEWS.get(key)
@@ -52,6 +55,9 @@ for source in source_items.values():
     else:
         # Do not publish generic newsletter placeholders. Older issues need
         # document/image review before they can supply useful summaries.
+        continue
+    # Main page is now upcoming events and reviewed grades only (Sam, 23 Nov).
+    if not review or not (review.get('event_on') or review.get('kind') == 'grade'):
         continue
     url = urlsplit(source.get('source_url', ''))
     safe_url = urlunsplit((url.scheme, url.netloc, url.path, '', url.fragment))
@@ -66,6 +72,7 @@ for source in source_items.values():
         item['expires_on'] = review.get('expires_on')
         item['event_on'] = review.get('event_on')
         item['tags'] = review.get('tags', [])
+        item['kind'] = review.get('kind', 'event')
     item['match'] = classify(subject, summary, profile)
     # Personal relevance is reviewed metadata, not a side effect of copy wording.
     if key in {'1bfe6cad1733cbd88ba80842', '586eec97452540686c80eb60', '89c519e060d4934a0be6dd5d'}:
@@ -79,8 +86,9 @@ for source in source_items.values():
 assert items
 feed = dict(mode='snapshot', connection='snapshot', profile={'child_first_name': 'Blake', 'year_group': 3}, items=items, accounts=[], refresh={'running':False}, refresh_minutes=0, last_successful_refresh=raw['last_successful_refresh'], generated_at=max((r.get('reviewed_on', '') for r in REVIEWS.values()), default='2026-10-14'), coverage_text=coverage_note(update_status))
 out = ROOT/'docs'; out.mkdir(exist_ok=True)
+feed['revision'] = hashlib.sha256(json.dumps({'items': items}, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
 # Pages has its own presentation: do not rewrite the local-app UI with regexes.
-for name in ['index.html', 'app.css', 'app.js']:
+for name in ['index.html', 'app.css', 'app.js', 'pwa.js', 'sw.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png']:
     (out/name).write_bytes((ROOT/'pages'/name).read_bytes())
 for name in ['favicon.svg', 'school-logo.svg']:
     (out/name).write_bytes((ROOT/'static'/name).read_bytes())
@@ -94,9 +102,10 @@ window.schoolSnapshotApi = function(path) {
 # Remove obsolete synthetic output from the published tree.
 if (out/'demo.js').exists(): (out/'demo.js').unlink()
 (out/'.nojekyll').touch()
+(out/'feed.json').write_text(json.dumps(feed, ensure_ascii=False))
 # Version assets so a refreshed page cannot mix old presentation and new data.
 html = (out/'index.html').read_text()
-for name in ('app.css', 'app.js', 'snapshot.js'):
+for name in ('app.css', 'app.js', 'snapshot.js', 'pwa.js'):
     version = hashlib.sha256((out/name).read_bytes()).hexdigest()[:12]
     html = html.replace('./'+name+'"', './'+name+'?v='+version+'"')
 (out/'index.html').write_text(html)

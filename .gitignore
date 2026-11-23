@@ -1,5 +1,6 @@
 # Private family data: profile, synced email, local marks. Never commit.
 data/
+node_modules/
 *.corrupt
 .tmp-*.json
 

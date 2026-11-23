@@ -1,0 +1,8 @@
+{
+  "name": "kings-school-push",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Web Push delivery for the approved school dashboard snapshot",
+  "scripts": {"test": "node --test tests/push.test.cjs", "start": "node push/server.cjs"},
+  "dependencies": {"web-push": "4.0.0"}
+}

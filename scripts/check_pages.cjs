@@ -16,9 +16,14 @@ const assert = require('node:assert/strict');
     await page.waitForSelector('.card');
     const initialCount = await page.locator('.card').count();
     assert(initialCount > 0);
-    assert.equal(await page.locator('button, input, select, details').count(), 0);
+    assert.equal(await page.locator('#updates button, #updates input, #updates select, #updates details').count(), 0);
+    assert.equal(await page.locator('.schedule, .choir, #information').count(), 0);
+    assert.equal(await page.locator('#grades-title').innerText(), 'Grades');
+    const manifest=await (await page.request.get(new URL('./manifest.webmanifest',page.url()).href)).json();
+    assert.equal(manifest.display,'standalone');
+    assert.equal(manifest.scope,'./');
+    for(const icon of manifest.icons) assert.equal((await page.request.get(new URL(icon.src,page.url()).href)).status(),200);
     assert(!/A good week starts here|Saved|Archive|Sync coverage|imported emails/.test(await page.locator('body').innerText()));
-    assert.equal(await page.locator('.schedule').getByText('Choir', { exact: false }).count(), 0);
     assert(await page.locator('.school img').evaluate(img => img.complete && img.naturalWidth > 0));
     // Old saved/hidden choices must not hide information on the read-only page.
     await page.evaluate(() => localStorage.setItem('kings-family-marks-v1', JSON.stringify(Object.fromEntries([...document.querySelectorAll('.card')].map(card => [card.dataset.key, {done:true,dismissed:true}])))));
@@ -27,12 +32,12 @@ const assert = require('node:assert/strict');
     assert.equal(await page.locator('.card').count(), initialCount);
     const expired = await page.evaluate(async () => { const f=await schoolSnapshotApi('/api/feed'); const today=new Date().toLocaleDateString('en-CA',{timeZone:'Europe/London'}); return f.items.filter(i=>i.expires_on && i.expires_on<today).map(i=>i.key); });
     for (const key of expired) assert.equal(await page.locator('[data-key="'+key+'"]').count(),0);
-    assert((await page.locator('.card').filter({hasText:'Year 3 teaching-assistant provision'}).innerText()).includes('Mrs Hummel'));
+    assert.equal(await page.locator('.card').filter({hasText:'Year 3 teaching-assistant provision'}).count(),0);
     assert(!(await page.locator('#feed').innerText()).includes('Read the newsletter for notices'));
     assert.equal(await page.locator('#updates-title').innerText(), 'Upcoming');
     const displayedDates=await page.locator('#feed .event-date').evaluateAll(times=>times.map(t=>t.dateTime));
     assert.deepEqual(displayedDates, [...displayedDates].sort());
-    assert.equal(await page.locator('#information-feed .event-date').count(),0);
+    assert.equal(await page.locator('#grades-feed .event-date').count(),0);
     assert(await page.locator('.card').evaluateAll(cards=>cards.every(c=>c.querySelector('h3').compareDocumentPosition(c.querySelector('.source-note')) & Node.DOCUMENT_POSITION_FOLLOWING)));
     for (const width of [1440, 768, 390, 320]) {
       await page.setViewportSize({ width, height: 844 });
@@ -52,13 +57,15 @@ const assert = require('node:assert/strict');
       'window.schoolSnapshotApi=()=>Promise.resolve('+JSON.stringify({generated_at:'2026-11-23',coverage_text:'',items:[
         {key:'later',subject:'Later event',event_on:'2026-12-03',received_at:'2026-11-23',excerpt:'Later'},
         {key:'undated',subject:'School policy',expires_on:'2027-01-01',received_at:'2026-11-22',excerpt:'Undated'},
+        {key:'grade',kind:'grade',subject:'Spelling result',received_at:'2026-11-22',excerpt:'Synthetic grade'},
         {key:'today',subject:'Today event',event_on:'2026-12-01',received_at:'2026-11-01',excerpt:'Today'},
         {key:'past',subject:'Past event without expiry',event_on:'2026-11-30',received_at:'2026-11-23',excerpt:'Past'}
       ]})+');'}));
     await fixture.goto(process.env.KINGS_REVIEW_URL || 'http://127.0.0.1:8876/');
     await fixture.waitForSelector('#feed .card');
     assert.deepEqual(await fixture.locator('#feed .card').evaluateAll(cards=>cards.map(c=>c.dataset.key)),['today','later']);
-    assert.deepEqual(await fixture.locator('#information-feed .card').evaluateAll(cards=>cards.map(c=>c.dataset.key)),['undated']);
+    assert.deepEqual(await fixture.locator('#grades-feed .card').evaluateAll(cards=>cards.map(c=>c.dataset.key)),['grade']);
+    assert.equal(await fixture.locator('[data-key=undated]').count(),0);
     assert.equal(await fixture.locator('[data-key="past"]').count(),0);
     await fixture.clock.fastForward(120000);
     await fixture.reload();
@@ -66,7 +73,7 @@ const assert = require('node:assert/strict');
     assert.deepEqual(await fixture.locator('#feed .card').evaluateAll(cards=>cards.map(c=>c.dataset.key)),['later']);
     await fixture.close();
     assert.deepEqual(errors, []);
-    console.log('Passed: event-date order, date rollover, undated separation, receipt footnotes, read-only presentation, old marks ignored, logo, and 4 viewport widths.');
+    console.log('Passed: event-date order, date rollover, grades-only separation and PWA manifest, receipt footnotes, read-only presentation, old marks ignored, logo, and 4 viewport widths.');
   } finally {
     await browser.close();
   }

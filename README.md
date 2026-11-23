@@ -9,28 +9,53 @@ year group, what mentions an activity you follow, and what is general school new
 - Your profile, synced emails and saved/done/dismissed marks live only in `data/`
   (gitignored, created with `0700`/`0600` permissions).
 
-## Family Pages dashboard
+## Family Home Screen app
 
-[Open Blake’s School Desk](https://samdb.github.io/kings-school-dashboard/).
+[Open Blake’s school updates](https://agents.victorgroup.co.uk/school/).
+The [GitHub Pages mirror](https://samdb.github.io/kings-school-dashboard/) remains
+readable, but push notifications require the app URL above.
 
-Published at Sam’s request: reviewed summaries of real school messages, a Year 3
-view, confirmed Drawing/LAMDA clubs and the later choir-place offer (acceptance
-not verified). The public URL is not access control. Raw messages, credentials,
-medical details, billing and personal access links are excluded. Gmail source
-links require the viewer’s own Gmail sign-in.
+On iPhone (iOS 16.4 or later): open the app URL in Safari → Share → Add to Home
+Screen. Open its new icon, find “On your iPhone”, tap **Enable notifications** and
+allow the system prompt. **Send a test notification** verifies real-device delivery.
+This last device step cannot be verified by server tests alone.
 
-This is a read-only snapshot, not live Gmail. Four PDF letters and selected
-9 October newsletter image notices have been read and summarised. Other
-attachments, older newsletters and portal letters are not fully reviewed.
-There are no saved/done controls or browser marks in the published page.
-To update it, review the source messages and update the explicit summary allowlist
-in `scripts/build_pages.py`, then run `python3 scripts/build_pages.py` and publish
-`docs/`. The builder reads local state but exports only allowlisted summaries.
+The main page contains **upcoming events and reviewed grades only**, as requested
+by Sam on 23 November. Grades are not yet populated: Seesaw access is pending.
+Regular clubs and general policy notices are no longer shown. Sam’s current club
+corrections remain in `scripts/family_updates.json`: Friday LAMDA ended; choir is
+confirmed on Tuesdays. Do not overwrite these with the older enrolment/offer emails.
 
-Brand asset: the school’s own logo from
-https://kings-rochester.co.uk/wp-content/uploads/2025/07/ksr-logo-1.svg .
-Palette inspected on https://kings-rochester.co.uk/ on 14 October 2026:
-navy `#181e37`, pink `#e8345b`. This family desk is not an official school service.
+The page is public. Sam explicitly authorised Blake’s reviewed grades on the main
+page on 23 November. Publish only checked transcriptions/summaries for Blake, not
+raw mail, original schoolwork images, other children’s information, medical or
+billing details, credentials, or private access links. Keep source evidence private.
+
+The app uses the existing server and the open-source `web-push` package, without
+paid services or third-party analytics. Push text is generic (no grades or names).
+One notification per changed publication; the badge counts changed/new items
+since that device last opened the current page. Opening an old page does not
+clear newer updates. Removed/expired events do not trigger notifications; metadata
+and unchanged rebuilds do not trigger repeat alerts. Failed sends retry with
+backoff, and expired subscriptions are removed. iOS requires visible notifications
+for background push; there is no silent badge-only polling.
+
+`push/server.cjs` serves a fixed allowlist of generated public assets, never the
+local Gmail app. It listens only on 127.0.0.1:8767; Caddy serves `/school/` on the
+existing HTTPS domain. Device cookies are Secure/HttpOnly/SameSite=Strict and scoped
+to `/school/`; mutation routes enforce same-origin JSON. Subscription destinations
+are restricted to browser push providers, with rate and device limits. VAPID keys
+and subscriptions are private under `/var/lib/kings-school-push` (not this repo).
+
+Build with `python3 scripts/build_pages.py`. After checking the output, publish
+with `python3 scripts/publish_app.py`; releases under `/srv/kings-school-app/releases`
+are switched atomically. The service notices changes within one minute, without a
+second school-source review schedule. `push/kings-school-app.service` documents the
+installed service. Run `npm test`, Python tests and `scripts/check_pages.cjs` after
+relevant code changes. Backend changes also require restarting that service.
+
+Brand asset: the school’s actual logo, with the existing family favicon rendered
+to Home Screen icon sizes. This is not an official school service.
 
 ## Run it
 
@@ -192,13 +217,11 @@ data/                  (gitignored) config.json, state.json, marks.json
 reviewed summaries from the private local data and writes `docs/`. The local
 Gmail application in `static/` is separate. Do not edit generated `docs/` files alone.
 
-The published page shows confirmed clubs, official term dates and upcoming
-events in event-date order (soonest first). Reviewed events use an explicit
-`event_on` ISO date; receipt and expiry dates are never treated as event dates.
-Undated notices appear separately under School information. Notice receipt dates
-are source footnotes. All current information is visible without filters or
-pagination; past events are omitted. Generated assets have content-versioned URLs. The published page is read-only: no Save, Archive, task controls or
-browser storage. Source links open the original school email in Gmail.
+The published page shows upcoming events in event-date order, soonest first,
+and checked grades newest first. Explicit `event_on` dates are not inferred from
+receipt or expiry. Notice receipt dates remain source footnotes. There are no
+per-item task controls or hidden/done states. Notification acknowledgement affects
+only the app badge, never content visibility. Generated assets have versioned URLs.
 
 Term dates were checked on 14 October 2026 against
 https://kings-rochester.co.uk/admissions/term-dates/ . They require editorial updates.

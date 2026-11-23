@@ -1,0 +1,26 @@
+[Unit]
+Description=School Home Screen app and Web Push delivery
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/.openclaw/workspace/projects/kings-school-dashboard
+ExecStart=/usr/bin/node push/server.cjs
+Environment=KINGS_PUBLIC_DIR=/srv/kings-school-app/current
+Environment=KINGS_PUSH_DATA=/var/lib/kings-school-push
+Environment=KINGS_PUSH_PORT=8767
+Restart=on-failure
+RestartSec=5
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/var/lib/kings-school-push
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+
+[Install]
+WantedBy=multi-user.target

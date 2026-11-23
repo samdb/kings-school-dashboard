@@ -29,6 +29,11 @@ def approved_reviews(reviews):
         if not isinstance(review.get('points', []), list) or not all(isinstance(p, str) for p in review.get('points', [])):
             continue
         clean = {k: review[k] for k in ('title', 'summary', 'points', 'reviewed_on', 'expires_on', 'event_on') if k in review}
+        if review.get('kind') == 'grade':
+            # Sam authorised Blake's reviewed grades on the main page, 23 Nov.
+            if review.get('child') != 'Blake':
+                continue
+            clean['kind'] = 'grade'
         clean['links'] = []
         clean['tags'] = [tag for tag in review.get('tags', []) if tag in AUDIENCE_TAGS]
         for link in review.get('links', []):
