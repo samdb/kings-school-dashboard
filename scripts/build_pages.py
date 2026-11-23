@@ -1,5 +1,6 @@
 """Build the authorised family Pages snapshot from reviewed summaries, never raw mail."""
 import json
+import hashlib
 import re
 import sys
 from pathlib import Path
@@ -63,6 +64,7 @@ for source in source_items.values():
         item['links'] = review.get('links', [])
         item['reviewed_on'] = review['reviewed_on']
         item['expires_on'] = review.get('expires_on')
+        item['event_on'] = review.get('event_on')
     item['match'] = classify(subject, summary, profile)
     # Personal relevance is reviewed metadata, not a side effect of copy wording.
     if key in {'1bfe6cad1733cbd88ba80842', '586eec97452540686c80eb60', '89c519e060d4934a0be6dd5d'}:
@@ -91,4 +93,10 @@ window.schoolSnapshotApi = function(path) {
 # Remove obsolete synthetic output from the published tree.
 if (out/'demo.js').exists(): (out/'demo.js').unlink()
 (out/'.nojekyll').touch()
+# Version assets so a refreshed page cannot mix old presentation and new data.
+html = (out/'index.html').read_text()
+for name in ('app.css', 'app.js', 'snapshot.js'):
+    version = hashlib.sha256((out/name).read_bytes()).hexdigest()[:12]
+    html = html.replace('./'+name+'"', './'+name+'?v='+version+'"')
+(out/'index.html').write_text(html)
 print(f'Built {len(items)} reviewed real school updates')

@@ -192,9 +192,12 @@ data/                  (gitignored) config.json, state.json, marks.json
 reviewed summaries from the private local data and writes `docs/`. The local
 Gmail application in `static/` is separate. Do not edit generated `docs/` files alone.
 
-The published page shows confirmed clubs, official term dates and chronological
-updates. All current updates are visible without filters or pagination. Past events
-are omitted. The published page is read-only: no Save, Archive, task controls or
+The published page shows confirmed clubs, official term dates and upcoming
+events in event-date order (soonest first). Reviewed events use an explicit
+`event_on` ISO date; receipt and expiry dates are never treated as event dates.
+Undated notices appear separately under School information. Notice receipt dates
+are source footnotes. All current information is visible without filters or
+pagination; past events are omitted. Generated assets have content-versioned URLs. The published page is read-only: no Save, Archive, task controls or
 browser storage. Source links open the original school email in Gmail.
 
 Term dates were checked on 14 October 2026 against

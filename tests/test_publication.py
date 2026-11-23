@@ -10,8 +10,14 @@ class PublicationTests(unittest.TestCase):
     def test_unread_or_unapproved_never_publishes(self):
         for changes in ({'status':'incomplete'}, {'public_safe':False}, {'evidence':''},
                         {'source_checks':[{'status':'unread','reason':'Portal unavailable'}]},
-                        {'expires_on':'tomorrow'}):
+                        {'expires_on':'tomorrow'}, {'event_on':'2026-02-30'}, {'event_on':'20261201'}):
             self.assertEqual(approved_reviews({'key': dict(self.review(), **changes)}), {})
+
+    def test_event_date_is_explicit_not_inferred_from_receipt_or_expiry(self):
+        r = dict(self.review(), expires_on='2026-12-05')
+        self.assertNotIn('event_on', approved_reviews({'key':r})['key'])
+        r['event_on'] = '2026-12-01'
+        self.assertEqual(approved_reviews({'key':r})['key']['event_on'], '2026-12-01')
 
     def test_only_presentation_fields_and_safe_public_links(self):
         r = self.review()

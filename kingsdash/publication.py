@@ -17,13 +17,16 @@ def approved_reviews(reviews):
             date.fromisoformat(review['reviewed_on'])
             if review.get('expires_on'):
                 date.fromisoformat(review['expires_on'])
+            if review.get('event_on'):
+                if date.fromisoformat(review['event_on']).isoformat() != review['event_on']:
+                    continue
         except (KeyError, ValueError, TypeError):
             continue
         if not all(isinstance(review.get(k), str) and review[k].strip() for k in ('title', 'summary')):
             continue
         if not isinstance(review.get('points', []), list) or not all(isinstance(p, str) for p in review.get('points', [])):
             continue
-        clean = {k: review[k] for k in ('title', 'summary', 'points', 'reviewed_on', 'expires_on') if k in review}
+        clean = {k: review[k] for k in ('title', 'summary', 'points', 'reviewed_on', 'expires_on', 'event_on') if k in review}
         clean['links'] = []
         for link in review.get('links', []):
             url = urlsplit(link.get('url', ''))
