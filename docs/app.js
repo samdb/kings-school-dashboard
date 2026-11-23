@@ -69,7 +69,7 @@
     received.dateTime=item.received_at;note.append(received);article.append(note);
     return article;
   }
-  window.schoolSnapshotApi('/api/feed').then(feed=>{
+  function render(feed) {
     const today=new Date().toLocaleDateString('en-CA',{timeZone:'Europe/London'});
     const items=feed.items.filter(item=>!item.subject.startsWith('Past event:') && (!item.expires_on || item.expires_on>=today) && (!item.event_on || item.event_on>=today));
     const upcoming=items.filter(item=>item.event_on && !['grade','work'].includes(item.kind)).sort((a,b)=>a.event_on.localeCompare(b.event_on)||a.subject.localeCompare(b.subject));
@@ -82,5 +82,56 @@
     window.schoolRenderedRevision=feed.revision;
     window.dispatchEvent(new Event('school-rendered'));
 
-  }).catch(()=>{document.getElementById('feed').textContent='School updates could not load.';});
+  }
+  const base=new URL('./',location.href);
+  const savedKey='school-feed:'+base.pathname;
+  const status=document.getElementById('refresh-status');
+  const message=document.getElementById('refresh-message');
+  const retry=document.getElementById('refresh-retry');
+  let current, pending;
+  function valid(feed) {return feed && Array.isArray(feed.items) && typeof feed.revision==='string' && Number.isFinite(Date.parse(feed.generated_at));}
+  function state(text,busy=false,failed=false) {
+    message.textContent=text;status.setAttribute('aria-busy',String(busy));retry.hidden=!failed;
+  }
+  async function refresh() {
+    if(pending)return pending;
+    window.schoolFreshRevision=null;
+    state('Checking for updates…',true);
+    pending=(async()=>{
+      const controller=new AbortController();
+      const timeout=setTimeout(()=>controller.abort(),8000);
+      try {
+        const response=await fetch(new URL('feed.json',base),{cache:'no-store',signal:controller.signal});
+        if(!response.ok)throw Error('Update unavailable');
+        const feed=await response.json();
+        if(!valid(feed))throw Error('Invalid update');
+        // Do not replace cards or steal focus when only the check timestamp changed.
+        if(!current || JSON.stringify(current)!==JSON.stringify(feed))render(feed);
+        current=feed;
+        try {localStorage.setItem(savedKey,JSON.stringify(feed));}catch{}
+        window.schoolFreshRevision=feed.revision;
+        state('Up to date');
+        window.dispatchEvent(new Event('school-rendered'));
+      } catch {
+        state(navigator.onLine?'Couldn’t check for updates. Showing saved content.':'Offline · showing saved content.',false,true);
+      } finally {clearTimeout(timeout);pending=null;}
+    })();
+    return pending;
+  }
+  window.schoolRefresh=refresh;
+  retry.addEventListener('click',refresh);
+  window.addEventListener('online',refresh);
+  window.addEventListener('offline',()=>{window.schoolFreshRevision=null;state('Offline · showing saved content.',false,true);});
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState==='visible') {if(current)render(current);refresh();}
+    else window.schoolFreshRevision=null;
+  });
+  window.addEventListener('pageshow',event=>{if(event.persisted)refresh();});
+  window.schoolSnapshotApi('/api/feed').then(feed=>{
+    let saved;
+    try {saved=JSON.parse(localStorage.getItem(savedKey));}catch{}
+    current=valid(saved) && Date.parse(saved.generated_at)>Date.parse(feed.generated_at)?saved:feed;
+    render(current);
+    refresh();
+  }).catch(()=>{state('School updates could not load. Please reopen the app.',false);});
 })();

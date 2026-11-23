@@ -6,7 +6,7 @@ const assert = require('node:assert/strict');
   const browser = await chromium.launch({
     executablePath: process.env.CHROMIUM_PATH || undefined,
     headless: true,
-    chromiumSandbox: true,
+    chromiumSandbox: process.env.CHROMIUM_SANDBOX !== 'false',
   });
   try {
     const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
@@ -65,7 +65,8 @@ const assert = require('node:assert/strict');
     await page.screenshot({path:'/tmp/kings-upcoming-mobile.png'});
     // Dates, not arrival order or expiry, determine the upcoming list. Verify
     // the day boundary and undated information with a separate synthetic page.
-    const fixture=await browser.newPage();
+    const fixture=await browser.newPage({serviceWorkers:'block'});
+    await fixture.route('**/feed.json',route=>route.abort());
     await fixture.clock.install({time:new Date('2026-12-01T23:59:00Z')});
     await fixture.route('**/snapshot.js*',route=>route.fulfill({contentType:'text/javascript',body:
       'window.schoolSnapshotApi=()=>Promise.resolve('+JSON.stringify({generated_at:'2026-11-23',coverage_text:'',items:[

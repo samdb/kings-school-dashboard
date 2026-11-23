@@ -121,4 +121,13 @@ for name in ('app.css', 'app.js', 'snapshot.js', 'pwa.js'):
     version = hashlib.sha256((out/name).read_bytes()).hexdigest()[:12]
     html = html.replace('./'+name+'"', './'+name+'?v='+version+'"')
 (out/'index.html').write_text(html)
+# Each worker installs a byte-verified release; URLs match the versioned HTML exactly.
+asset_names = ['index.html', 'manifest.webmanifest', 'favicon.svg', 'school-logo.svg',
+               'icon-192.png?v=shield-1', 'icon-512.png?v=shield-1', 'apple-touch-icon.png?v=shield-1']
+asset_names += re.findall(r'(?:href|src)="\./([^" ]+\?v=[a-f0-9]{12})"', html)
+assets = {name: hashlib.sha256((out/name.split('?')[0]).read_bytes()).hexdigest() for name in asset_names}
+release = hashlib.sha256(json.dumps(assets, sort_keys=True).encode()).hexdigest()[:20]
+worker = (ROOT/'pages/sw.js').read_text().replace('/* SCHOOL_RELEASE */ "development"', json.dumps(release))
+worker = worker.replace('/* SCHOOL_ASSETS */ {}', json.dumps(assets)).replace('/* SCHOOL_MEDIA */ []', json.dumps(sorted(used_media)))
+(out/'sw.js').write_text(worker)
 print(f'Built {len(items)} reviewed real school updates')

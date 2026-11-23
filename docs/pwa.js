@@ -22,7 +22,7 @@
     return response.json();
   }
   async function seen() {
-    if (!window.schoolRenderedRevision || document.visibilityState !== 'visible' || !config?.enabled) return;
+    if (!window.schoolRenderedRevision || window.schoolFreshRevision !== window.schoolRenderedRevision || document.visibilityState !== 'visible' || !config?.enabled) return;
     try {
       const result = await api('seen', {revision:window.schoolRenderedRevision});
       if (result.seen && 'clearAppBadge' in navigator) await navigator.clearAppBadge();
@@ -60,14 +60,6 @@
       enable.hidden = true;
     }
     window.addEventListener('school-rendered', seen);
-    document.addEventListener('visibilitychange', ()=>{
-      if (document.visibilityState === 'visible') {
-        // Refresh a suspended app before clearing any badge for newer notices.
-        fetch(new URL('feed.json',base),{cache:'no-store'}).then(r=>r.json()).then(feed=>{
-          if(feed.revision !== window.schoolRenderedRevision) location.reload(); else seen();
-        }).catch(()=>{});
-      }
-    });
     await seen();
     enable.addEventListener('click', async()=>{
       enable.disabled=true;

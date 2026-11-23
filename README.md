@@ -242,6 +242,25 @@ Optional environment variables: `PLAYWRIGHT_MODULE` for a module path,
 `CHROMIUM_PATH` for an installed browser, and `KINGS_REVIEW_URL` for the deployed URL.
 Checks run in a fresh browser context.
 
+### Cached Home Screen launch
+
+The service worker installs a hash-verified public page release and opens that
+saved shell first. Only allowlisted page assets and viewed approved work images
+are cached; notification APIs and live feed checks remain network-only. One previous
+shell cache is retained, scoped to this app. Device/subscription storage is unchanged.
+
+The last successfully checked feed is retained locally. Launch, resume and reconnect
+check the live feed in the background, with a visible spinner, an eight-second timeout
+and a saved-content message/retry if unavailable. Fresh content renders in place.
+Badge acknowledgement requires both a successful live check and the matching rendered
+revision, which the server independently checks. Offline/stale pages never acknowledge.
+
+Run `node scripts/check_cache.cjs` after building to check real service-worker slow
+launches, offline reopening/images, reconnect, retry, cached newer content and rejected
+incomplete releases. It starts its own isolated server and never sends live pushes.
+The browser environment variables above also apply. Container-only layout checks may
+use `CHROMIUM_SANDBOX=false` where user namespaces are unavailable.
+
 ### Document reviews
 
 `scripts/reviewed_content.json` stores explicitly reviewed summaries, bullet
