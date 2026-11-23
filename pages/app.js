@@ -24,7 +24,9 @@
     return article;
   }
   window.schoolSnapshotApi('/api/feed').then(feed=>{
-    const items=feed.items.filter(item=>!item.subject.startsWith('Past event:')).sort((a,b)=>b.received_at.localeCompare(a.received_at));
+    const today=new Date().toLocaleDateString('en-CA',{timeZone:'Europe/London'});
+    const items=feed.items.filter(item=>!item.subject.startsWith('Past event:') && (!item.expires_on || item.expires_on>=today)).sort((a,b)=>b.received_at.localeCompare(a.received_at));
+    document.getElementById('coverage-note').textContent=feed.coverage_text;
     document.getElementById('result-count').textContent='';
     document.getElementById('feed').replaceChildren(...items.map(card));
     document.getElementById('snapshot-date').textContent='Updated '+dateFormat.format(new Date(feed.generated_at))+'.';

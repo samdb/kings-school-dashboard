@@ -9,6 +9,8 @@ sys.path.insert(0, str(ROOT))
 from kingsdash.service import Service
 from kingsdash.config import Env
 from kingsdash.matching import classify
+from kingsdash.storage import read_json
+from kingsdash.publication import approved_reviews, coverage_note
 
 # Explicitly reviewed summaries keyed to their source. No arbitrary email export.
 SUMMARIES = {
@@ -25,12 +27,22 @@ SUMMARIES = {
  '1faa3ceffa714b82241b7a92': ('Junior School leadership opportunities', 'Junior School leadership opportunities. Read the letter in the original email.'),
 }
 REVIEWS = json.loads((ROOT/'scripts/reviewed_content.json').read_text())
-raw = Service(Env()).feed()
+env = Env()
+raw = Service(env).feed()
+private_reviews = read_json(str(Path(env.data_dir)/'reviews.json'), {})
+approved = approved_reviews(private_reviews)
+REVIEWS.update(approved)
+extra_sources = read_json(str(Path(env.data_dir)/'sources.json'), {})
+source_items = {s['key']: s for s in raw['items']}
+source_items.update(extra_sources)
+update_status = read_json(str(Path(env.data_dir)/'update_status.json'), {})
 assert raw['mode'] == 'live', 'Refusing to publish synthetic data'
 profile = dict(raw['profile'], activities=['Guided Drawing', 'LAMDA', 'Choir'])
 items = []
-for source in raw['items']:
+for source in source_items.values():
     key = source['key']
+    if key in private_reviews and key not in approved:
+        continue
     review = REVIEWS.get(key)
     if review:
         subject, summary = review['title'], review['summary']
@@ -50,6 +62,7 @@ for source in raw['items']:
         item['points'] = review.get('points', [])
         item['links'] = review.get('links', [])
         item['reviewed_on'] = review['reviewed_on']
+        item['expires_on'] = review.get('expires_on')
     item['match'] = classify(subject, summary, profile)
     # Personal relevance is reviewed metadata, not a side effect of copy wording.
     if key in {'1bfe6cad1733cbd88ba80842', '586eec97452540686c80eb60', '89c519e060d4934a0be6dd5d'}:
@@ -61,7 +74,7 @@ for source in raw['items']:
         item['match'] = dict(category='general',direct=False,year_match=False,activities=[],years_mentioned=[],possible_actions=[],reasons=[dict(kind='general',text='Whole-school newsletter; individual stories do not restrict its audience.')])
     items.append(item)
 assert items
-feed = dict(mode='snapshot',connection='snapshot',profile=profile,items=items,accounts=[],refresh={'running':False},refresh_minutes=0,last_successful_refresh=raw['last_successful_refresh'],generated_at=raw['generated_at'],coverage_text=f"{len(items)} reviewed updates from {len(raw['items'])} imported threads. 24 Victor threads were not retrieved in the last sync. Four PDF letters and selected 9 October newsletter notices reviewed; remaining attachments, older newsletters, portal letters and video not reviewed. Personal medical, billing and account-access messages are not published.")
+feed = dict(mode='snapshot', connection='snapshot', profile={'child_first_name': 'Blake', 'year_group': 3}, items=items, accounts=[], refresh={'running':False}, refresh_minutes=0, last_successful_refresh=raw['last_successful_refresh'], generated_at=max((r.get('reviewed_on', '') for r in REVIEWS.values()), default='2026-10-14'), coverage_text=coverage_note(update_status))
 out = ROOT/'docs'; out.mkdir(exist_ok=True)
 # Pages has its own presentation: do not rewrite the local-app UI with regexes.
 for name in ['index.html', 'app.css', 'app.js']:
