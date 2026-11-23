@@ -1,11 +1,10 @@
 # The Family School Desk — King's School Rochester
 
-A private, local-only dashboard that reads King's School Rochester emails from Gmail
-(**read-only**) and sorts them for one family: what names your child, what is for their
-year group, what mentions an activity you follow, and what is general school news.
+A family dashboard with a private, read-only Gmail collector and a published
+Home Screen app showing reviewed upcoming events and grades. Raw emails stay local.
 
-- Python 3 standard library backend, plain HTML/CSS/JS frontend. No build step, no
-  third-party packages, no paid APIs, no external fonts, scripts or telemetry.
+- Local inbox app: Python 3 standard library backend and plain HTML/CSS/JS.
+  Home Screen app: Node.js plus web-push. No paid APIs, external fonts or telemetry.
 - Your profile, synced emails and saved/done/dismissed marks live only in `data/`
   (gitignored, created with `0700`/`0600` permissions).
 
