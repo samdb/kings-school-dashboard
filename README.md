@@ -294,3 +294,17 @@ newsletter placeholders are omitted until reviewed; omission is not a claim
 that those issues contain nothing relevant. Review future linked pages, image
 notices and PDFs before publishing relevance conclusions. Downloads stay in
 gitignored `data/`. This editorial review is not an automated attachment reader.
+
+### iPhone top-edge appearance
+
+Do not restore `apple-mobile-web-app-status-bar-style=black-translucent`.
+Sam’s 23 November screenshots showed a grey system fade crossing the navy
+header despite matching theme colours and safe-area padding. WebKit recommends
+removing this deprecated setting so iOS chooses its own opaque status area:
+https://bugs.webkit.org/show_bug.cgi?id=317153#c2 .
+The page retains viewport-fit, safe-area padding, app identity and subscriptions.
+Prefer dynamic viewport height (with a legacy fallback). Safari’s own translucent
+address/tool bars are browser UI, not a page gradient. Existing Home Screen icons
+may retain install-time metadata; first try reopening, and only consider re-adding
+if the old treatment persists. Re-adding may require enabling notifications again.
+Native iPhone appearance remains device-verification pending.
