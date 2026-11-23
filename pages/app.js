@@ -21,6 +21,8 @@
     if(lightbox.open)lightbox.close();
     closeMenu();
     if(focus){document.getElementById('page-title').focus({preventScroll:true});window.scrollTo(0,0);}
+    window.schoolActiveCategory=view==='grades'?'grades':view==='upcoming'?'events':null;
+    window.dispatchEvent(new Event('school-view-changed'));
   }
   function node(tag, cls, text) {const e=document.createElement(tag);if(cls)e.className=cls;if(text)e.textContent=text;return e;}
   const lightbox=node('dialog','work-lightbox');lightbox.setAttribute('aria-labelledby','work-image-title');

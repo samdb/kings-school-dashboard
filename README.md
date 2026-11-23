@@ -15,12 +15,13 @@ The [GitHub Pages mirror](https://samdb.github.io/kings-school-dashboard/) remai
 readable, but push notifications require the app URL above.
 
 On iPhone (iOS 16.4 or later): open the app URL in Safari → Share → Add to Home
-Screen. Open its new icon, find “On your iPhone”, tap **Enable notifications** and
-allow the system prompt. **Send a test notification** verifies real-device delivery.
+Screen. Open its new icon, choose **Menu → App settings**, tap **Enable notifications**
+and allow the system prompt. **Test event notification** and **Test schoolwork
+notification** check each notification’s delivery and tap destination.
 This last device step cannot be verified by server tests alone.
 
-The main page contains **upcoming events, reviewed schoolwork and grades**, as requested
-by Sam on 23 November. Seesaw family access is established and the first checked
+The main screen is **Upcoming**; the menu opens separate schoolwork/grades, term
+dates, past events and app settings screens, as requested by Sam on 23 November. Seesaw family access is established and the first checked
 spelling results are published; historical grades and other posts still need review.
 Regular clubs and general policy notices are no longer shown. Sam’s current club
 corrections remain in `scripts/family_updates.json`: Friday LAMDA ended; choir is
@@ -35,9 +36,18 @@ lightboxes. Only individually approved images enter the public media allowlist. 
 
 The app uses the existing server and the open-source `web-push` package, without
 paid services or third-party analytics. Push text is generic (no grades or names).
-One notification per changed publication; the badge counts changed/new items
-since that device last opened the current page. Opening an old page does not
-clear newer updates. Removed/expired events do not trigger notifications; metadata
+Each publication produces up to one alert per changed category: grade/work items
+use **New schoolwork & marks** and open `#grades`; dated events and term dates use
+**New school events** and open `#upcoming`. Tags and Web Push topics are separate
+so one category cannot replace the other. Only these in-app routes are accepted.
+
+The badge totals unread items across both categories. A fresh, visible Schoolwork
+& grades screen acknowledges only grades/work; Upcoming acknowledges only events.
+Settings, Term dates, Past events, stale/offline pages and legacy clients without
+a category do not acknowledge unread categories. Reading one leaves the other's
+notification and badge count intact. Category delivery and retries persist across
+restarts; partial failures never resend successful unchanged items. Existing generic
+alert state migrates without replaying already-delivered items. Removed/expired events do not trigger notifications; metadata
 and unchanged rebuilds do not trigger repeat alerts. Failed sends retry with
 backoff, and expired subscriptions are removed. iOS requires visible notifications
 for background push; there is no silent badge-only polling.
@@ -260,7 +270,11 @@ The last successfully checked feed is retained locally. Launch, resume and recon
 check the live feed in the background, with a visible spinner, an eight-second timeout
 and a saved-content message/retry if unavailable. Fresh content renders in place.
 Badge acknowledgement requires both a successful live check and the matching rendered
-revision, which the server independently checks. Offline/stale pages never acknowledge.
+revision, which the server independently checks, plus the active grades/events screen.
+Offline/stale pages never acknowledge. `node scripts/check_push_ui.cjs` verifies
+category acknowledgement and the two test buttons using mocked browser notification
+APIs; `npm test` covers split delivery, retries, migration and tap routing. Neither
+check sends real pushes or proves native iPhone notification taps.
 
 Run `node scripts/check_cache.cjs` after building to check real service-worker slow
 launches, offline reopening/images, reconnect, retry, cached newer content and rejected

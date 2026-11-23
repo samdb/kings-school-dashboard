@@ -23,15 +23,29 @@ function versions(feed, today=new Date().toLocaleDateString('en-CA',{timeZone:'E
   }
   return result;
 }
+const categoryOf=item=>['grade','work'].includes(item.kind)?'grades':'events';
+const needsDelivery=device=>Object.keys(device.pending).some(key=>device.delivered[key]!==device.pending[key]);
+function prepareDevice(device) {
+  device.pending ||= {};
+  // Previously delivered generic alerts must not be replayed during migration.
+  if(!device.delivered)device.delivered=device.needsSend?{}:{...device.pending};
+  if(!device.retries)device.retries=Object.fromEntries(['grades','events'].map(category=>[category,{failures:device.failures||0,nextAttempt:device.needsSend?device.nextAttempt||0:0}]));
+}
 function reconcile(state,feed,today) {
   const current=versions(feed,today);
-  const changed=state.versions ? Object.keys(current).filter(k=>state.versions[k]!==current[k]) : [];
+  const categories=Object.fromEntries(feed.items.filter(item=>current[item.key]).map(item=>[item.key,categoryOf(item)]));
+  const changed=state.versions ? Object.keys(current).filter(k=>state.versions[k]!==current[k] || state.categories?.[k] && state.categories[k]!==categories[k]) : [];
   for(const device of Object.values(state.devices)) {
+    prepareDevice(device);
     for(const key of Object.keys(device.pending)) if(!current[key]) delete device.pending[key];
-    for(const key of changed) device.pending[key]=current[key];
-    if(changed.length) {device.needsSend=true;device.nextAttempt=0;}
+    for(const key of Object.keys(device.delivered)) if(!device.pending[key]) delete device.delivered[key];
+    for(const key of changed) {
+      device.pending[key]=current[key];delete device.delivered[key];
+      device.retries[categories[key]]={failures:0,nextAttempt:0};
+    }
+    device.needsSend=needsDelivery(device);
   }
-  state.versions=current;state.revision=feed.revision;
+  state.versions=current;state.categories=categories;state.revision=feed.revision;
   return changed;
 }
 function validateSubscription(sub) {
@@ -58,7 +72,7 @@ function createApp(options={}) {
   const persist=()=>save(stateFile,state);
   const send=options.send || ((subscription,payload)=>webpush.sendNotification(subscription,JSON.stringify(payload),{
     vapidDetails:{subject:'mailto:sam@victorgroup.co.uk',publicKey:keys.publicKey,privateKey:keys.privateKey},
-    TTL:86400,urgency:'normal',timeout:10000,topic:payload.test?'school-test':'school-updates'
+    TTL:86400,urgency:'normal',timeout:10000,topic:(payload.test?'school-test-':'school-')+(payload.category==='grades'?'grades':'events')
   }));
   const readFeed=()=>JSON.parse(fs.readFileSync(path.join(docs,'feed.json')));
   const refresh=()=>{reconcile(state,readFeed());persist();};
@@ -70,17 +84,26 @@ function createApp(options={}) {
     try {
       refresh();
       for(const [id,device] of Object.entries(state.devices)) {
-        if(!device.needsSend || device.nextAttempt>Date.now()) continue;
-        if(!Object.keys(device.pending).length){device.needsSend=false;continue;}
-        const fingerprint=JSON.stringify(device.pending);
-        try {
-          await send(device.subscription,{count:Object.keys(device.pending).length});
-          if(state.devices[id]===device && fingerprint===JSON.stringify(device.pending)) {device.needsSend=false;device.failures=0;}
-        } catch(error) {
-          if([404,410].includes(error.statusCode)) delete state.devices[id];
-          else {device.failures=(device.failures||0)+1;device.nextAttempt=Date.now()+Math.min(3600000,60000*2**Math.min(device.failures,6));}
+        if(!device.needsSend)continue;
+        for(const category of ['grades','events']) {
+          if(state.devices[id]!==device)break;
+          const retry=device.retries[category]||{failures:0,nextAttempt:0};
+          const pending=Object.entries(device.pending).filter(([key,version])=>state.categories[key]===category && device.delivered[key]!==version);
+          if(!pending.length||retry.nextAttempt>Date.now())continue;
+          try {
+            await send(device.subscription,{category,count:Object.keys(device.pending).length});
+            if(state.devices[id]===device) {
+              // Acknowledgement or a newer publication may arrive while the send is in flight.
+              for(const [key,version] of pending)if(device.pending[key]===version&&state.categories[key]===category)device.delivered[key]=version;
+              device.retries[category]={failures:0,nextAttempt:0};
+            }
+          } catch(error) {
+            if([404,410].includes(error.statusCode))delete state.devices[id];
+            else {const failures=retry.failures+1;device.retries[category]={failures,nextAttempt:Date.now()+Math.min(3600000,60000*2**Math.min(failures,6))};}
+          }
+          device.needsSend=needsDelivery(device);
+          persist();
         }
-        persist();
       }
       persist();
     } finally {busy=false;}
@@ -121,7 +144,8 @@ function createApp(options={}) {
       const token=(req.headers.cookie||'').match(/(?:^|;\s*)kings_device=([a-f0-9]{64})(?:;|$)/)?.[1];
       const id=token?sha(token):null;
       const device=id?state.devices[id]:null;
-      const info=()=>({publicKey:keys.publicKey,enabled:!!device,count:device?Object.keys(device.pending).length:0,revision:state.revision});
+      const info=()=>({publicKey:keys.publicKey,enabled:!!device,count:device?Object.keys(device.pending).length:0,revision:state.revision,
+        categories:Object.fromEntries(['grades','events'].map(category=>[category,device?Object.keys(device.pending).filter(key=>state.categories[key]===category).length:0]))});
       if(route==='api/status' && req.method==='GET') return reply(200,info());
       if(req.method!=='POST') return reply(405,{error:'Method not allowed'});
       if(req.headers.origin!==origin || req.headers['content-type']?.split(';')[0]!=='application/json') return reply(403,{error:'Origin or content type refused'});
@@ -148,8 +172,10 @@ function createApp(options={}) {
       if(!device) return reply(401,{error:'This device is not subscribed'});
       if(route==='api/seen') {
         refresh();
-        if(input.revision!==state.revision) return reply(200,{seen:false});
-        device.pending={};device.needsSend=false;persist();return reply(200,{seen:true});
+        if(input.revision!==state.revision || !['grades','events'].includes(input.category)) return reply(200,{seen:false,...info()});
+        for(const key of Object.keys(device.pending))if(state.categories[key]===input.category){delete device.pending[key];delete device.delivered[key];}
+        device.retries[input.category]={failures:0,nextAttempt:0};
+        device.needsSend=needsDelivery(device);persist();return reply(200,{seen:true,...info()});
       }
       if(route==='api/unsubscribe') {
         delete state.devices[id];persist();
@@ -158,7 +184,8 @@ function createApp(options={}) {
       }
       if(route==='api/test') {
         if(limited('test:'+id,5)) return reply(429,{error:'Test limit reached'});
-        try {await send(device.subscription,{test:true,count:Object.keys(device.pending).length});return reply(200,{sent:true});}
+        if(input.category!==undefined&&!['grades','events'].includes(input.category))return reply(400,{error:'Unknown notification category'});
+        try {await send(device.subscription,{test:true,category:input.category||'events',count:Object.keys(device.pending).length});return reply(200,{sent:true});}
         catch(error) {if([404,410].includes(error.statusCode)){delete state.devices[id];persist();}return reply(502,{error:'Push service did not accept notification'});}
       }
       return reply(404,{error:'Not found'});

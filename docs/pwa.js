@@ -5,6 +5,7 @@
   const enable = document.getElementById('enable-notifications');
   const disable = document.getElementById('disable-notifications');
   const test = document.getElementById('test-notifications');
+  const testGrades = document.getElementById('test-grades-notifications');
   const base = new URL('./', location.href);
   const appleMobile = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
@@ -21,17 +22,26 @@
     if (!response.ok) throw new Error(response.status === 429 ? 'Please wait a moment and try again.' : 'Could not save notification settings. Please try again.');
     return response.json();
   }
+  let acknowledging=false, acknowledgeAgain=false;
   async function seen() {
+    if(acknowledging){acknowledgeAgain=true;return;}
+    const category=window.schoolActiveCategory;
+    if(!['grades','events'].includes(category))return;
     if (!window.schoolRenderedRevision || window.schoolFreshRevision !== window.schoolRenderedRevision || document.visibilityState !== 'visible' || !config?.enabled) return;
+    acknowledging=true;
     try {
-      const result = await api('seen', {revision:window.schoolRenderedRevision});
-      if (result.seen && 'clearAppBadge' in navigator) await navigator.clearAppBadge();
-      if (result.seen) (await registration.getNotifications()).forEach(n=>n.close());
+      const result = await api('seen', {revision:window.schoolRenderedRevision,category});
+      if (result.seen) {
+        if(result.count && 'setAppBadge' in navigator)await navigator.setAppBadge(result.count);
+        else if(!result.count && 'clearAppBadge' in navigator)await navigator.clearAppBadge();
+        (await registration.getNotifications()).forEach(n=>{if(n.data?.category===category || (!result.count && n.tag==='school-updates'))n.close();});
+      }
     } catch { /* Keep the badge if the rendered page cannot be acknowledged. */ }
+    finally {acknowledging=false;if(acknowledgeAgain){acknowledgeAgain=false;seen();}}
   }
   function controls(enabled) {
-    enable.hidden = enabled; disable.hidden = !enabled; test.hidden = !enabled;
-    status.textContent = enabled ? 'Notifications are on. The badge counts updates since you last opened the app.' : 'Get a notification and badge when new school updates are published.';
+    enable.hidden = enabled; disable.hidden = !enabled; test.hidden = !enabled; testGrades.hidden = !enabled;
+    status.textContent = enabled ? 'Notifications are on. Schoolwork and events have separate alerts. The badge counts unread updates across both screens.' : 'Get separate notifications for schoolwork and events, opening the relevant screen.';
   }
   function keyBytes(value) {
     const decoded=atob(value.replace(/-/g,'+').replace(/_/g,'/'));
@@ -60,6 +70,7 @@
       enable.hidden = true;
     }
     window.addEventListener('school-rendered', seen);
+    window.addEventListener('school-view-changed', seen);
     await seen();
     enable.addEventListener('click', async()=>{
       enable.disabled=true;
@@ -80,10 +91,10 @@
         if('clearAppBadge' in navigator) await navigator.clearAppBadge();
       } catch(error) {status.textContent=error.message;} finally {disable.disabled=false;}
     });
-    test.addEventListener('click', async()=>{
-      test.disabled=true;
-      try {await api('test',{});status.textContent='Test sent. Check your notifications.';}
-      catch(error) {status.textContent=error.message;} finally {test.disabled=false;}
+    for(const [button,category] of [[test,'events'],[testGrades,'grades']])button.addEventListener('click', async()=>{
+      button.disabled=true;
+      try {await api('test',{category});status.textContent='Test sent. Tap the notification to check it opens '+(category==='grades'?'Schoolwork & grades.':'Upcoming.');}
+      catch(error) {status.textContent=error.message;} finally {button.disabled=false;}
     });
   } catch { status.textContent='Notifications are temporarily unavailable. School updates are still readable.'; }
 })();

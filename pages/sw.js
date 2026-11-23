@@ -55,17 +55,18 @@ self.addEventListener('push', event=>{
   event.waitUntil((async()=>{
     let data={};
     try {data=event.data?.json() || {};} catch {}
+    const category=data.category==='grades'?'grades':'events';
     let count=Number.isSafeInteger(data.count) && data.count>0 ? data.count : 0;
     try {
       const response=await fetch(new URL('api/status',self.registration.scope),{credentials:'same-origin',cache:'no-store'});
       if(response.ok) {const current=await response.json(); if(current.enabled) count=current.count;}
     } catch {}
     // Every push displays a notification; iOS does not permit silent badge pushes.
-    await self.registration.showNotification(data.test ? 'School notifications are on' : 'New school updates',{
-      body:data.test ? 'Your Home Screen app is ready to receive school updates.' : 'Open the app to read the latest school information.',
+    await self.registration.showNotification(data.test ? (category==='grades'?'Schoolwork notification test':'Event notification test') : (category==='grades'?'New schoolwork & marks':'New school events'),{
+      body:category==='grades'?'Open Schoolwork & grades to see the update.':'Open Upcoming to see the update.',
       icon:new URL('icon-192.png?v=shield-1',self.registration.scope).href,
-      tag:data.test ? 'school-test' : 'school-updates',
-      data:{url:self.registration.scope}
+      tag:(data.test?'school-test-':'school-')+category,
+      data:{category}
     });
     if('setAppBadge' in self.navigator) {
       try {if(count) await self.navigator.setAppBadge(count); else await self.navigator.clearAppBadge();} catch {}
@@ -75,9 +76,13 @@ self.addEventListener('push', event=>{
 self.addEventListener('notificationclick',event=>{
   event.notification.close();
   event.waitUntil((async()=>{
-    const url=self.registration.scope;
+    // Never follow a payload-supplied URL: only these two in-app destinations.
+    const category=event.notification.data?.category==='grades'?'grades':'events';
+    const url=new URL(category==='grades'?'#grades':'#upcoming',self.registration.scope).href;
     for(const client of await self.clients.matchAll({type:'window',includeUncontrolled:true})) {
-      if(client.url.startsWith(url)) {await client.navigate(url);return client.focus();}
+      if(client.url.startsWith(self.registration.scope)) {
+        try {await client.navigate(url);return await client.focus();}catch{}
+      }
     }
     return self.clients.openWindow(url);
   })());

@@ -1,7 +1,7 @@
 'use strict';
 // Generated, exact allowlist of public page assets. APIs and private documents stay network-only.
-const RELEASE="9d814ac6df4ea2e8cff2";
-const ASSETS={"index.html": "7a0b1e5de766f858dcf55969bcf34c51ac86763b8c493d7405627e7dbf39bf3a", "manifest.webmanifest": "634d4518f29d903a8c8aebbb512f63efc162214966ed9f16928080f921dd7542", "favicon.svg": "0b207d3e79fd89cbc1ce137be6929848bde41b9dc6d0ef397c583a30b3a8d60c", "school-logo.svg": "4764d3cd5f4b9a009d2a268eafbc4b2236182c460eb2f45316f8191653bad679", "icon-192.png?v=shield-1": "19b9b310fed7c667ec657eb1af1f6cf17b80e169b6a07942c5d636aaceae5bfa", "icon-512.png?v=shield-1": "ac4a1abbfd89436a3590c2783b0a98d8757ef22c2b1919d516b3f308e0d310d3", "apple-touch-icon.png?v=shield-1": "5c274c0a2ef92375640a5afe87b0ee42dfaacfe223a31cb386a2b092c3b47a7d", "app.css?v=aabf8d81f90f": "aabf8d81f90f95b0b3e2ba772306d39ca40d1edcc4937b2ef5c765e375008c68", "snapshot.js?v=c1eb5991a39b": "c1eb5991a39bae091f6ab5391f87c8facf24a3a82ff36550649ec6a8dc8fd4f5", "app.js?v=7e760e09c3ed": "7e760e09c3eddcc5dc3d371600b4b4d307c3b9893d96db7ca5ca4190392ead8a", "pwa.js?v=f3943ee8697a": "f3943ee8697aab4e8695284e0f770c496e4c80da67123d59bd3e8e2365ef9459"};
+const RELEASE="b7ceecb95ee25b5511bf";
+const ASSETS={"index.html": "2ce01a17482fa02f97cb05f4cd79e5a3633595773884168a672427d224edd76c", "manifest.webmanifest": "634d4518f29d903a8c8aebbb512f63efc162214966ed9f16928080f921dd7542", "favicon.svg": "0b207d3e79fd89cbc1ce137be6929848bde41b9dc6d0ef397c583a30b3a8d60c", "school-logo.svg": "4764d3cd5f4b9a009d2a268eafbc4b2236182c460eb2f45316f8191653bad679", "icon-192.png?v=shield-1": "19b9b310fed7c667ec657eb1af1f6cf17b80e169b6a07942c5d636aaceae5bfa", "icon-512.png?v=shield-1": "ac4a1abbfd89436a3590c2783b0a98d8757ef22c2b1919d516b3f308e0d310d3", "apple-touch-icon.png?v=shield-1": "5c274c0a2ef92375640a5afe87b0ee42dfaacfe223a31cb386a2b092c3b47a7d", "app.css?v=aabf8d81f90f": "aabf8d81f90f95b0b3e2ba772306d39ca40d1edcc4937b2ef5c765e375008c68", "snapshot.js?v=c1eb5991a39b": "c1eb5991a39bae091f6ab5391f87c8facf24a3a82ff36550649ec6a8dc8fd4f5", "app.js?v=b9970fe964c4": "b9970fe964c4771180c950f53b78649010a1cfbda8eec8ccf7de86d428fc9e8b", "pwa.js?v=c29c74e47860": "c29c74e47860e95ab264a51daba5ae947ebe98b0156ac728a4b5bcba67d69912"};
 const MEDIA=["media/827905f99831faad0b4abb87bb0b615511dfa69195d3a5c116d9ce563823369c.png", "media/e1a8b8a32e06887aedb06bd4dc580407fd2b084bc0c8bbfafdd68c8b642de3ee.jpg", "media/fd7a19bc34b1a89c72c48636c7dde2eab9b9d10126d7c85db11890d3aacb4437.jpg"];
 const prefix='school-shell:'+self.registration.scope+':';
 const cacheName=prefix+RELEASE;
@@ -55,17 +55,18 @@ self.addEventListener('push', event=>{
   event.waitUntil((async()=>{
     let data={};
     try {data=event.data?.json() || {};} catch {}
+    const category=data.category==='grades'?'grades':'events';
     let count=Number.isSafeInteger(data.count) && data.count>0 ? data.count : 0;
     try {
       const response=await fetch(new URL('api/status',self.registration.scope),{credentials:'same-origin',cache:'no-store'});
       if(response.ok) {const current=await response.json(); if(current.enabled) count=current.count;}
     } catch {}
     // Every push displays a notification; iOS does not permit silent badge pushes.
-    await self.registration.showNotification(data.test ? 'School notifications are on' : 'New school updates',{
-      body:data.test ? 'Your Home Screen app is ready to receive school updates.' : 'Open the app to read the latest school information.',
+    await self.registration.showNotification(data.test ? (category==='grades'?'Schoolwork notification test':'Event notification test') : (category==='grades'?'New schoolwork & marks':'New school events'),{
+      body:category==='grades'?'Open Schoolwork & grades to see the update.':'Open Upcoming to see the update.',
       icon:new URL('icon-192.png?v=shield-1',self.registration.scope).href,
-      tag:data.test ? 'school-test' : 'school-updates',
-      data:{url:self.registration.scope}
+      tag:(data.test?'school-test-':'school-')+category,
+      data:{category}
     });
     if('setAppBadge' in self.navigator) {
       try {if(count) await self.navigator.setAppBadge(count); else await self.navigator.clearAppBadge();} catch {}
@@ -75,9 +76,13 @@ self.addEventListener('push', event=>{
 self.addEventListener('notificationclick',event=>{
   event.notification.close();
   event.waitUntil((async()=>{
-    const url=self.registration.scope;
+    // Never follow a payload-supplied URL: only these two in-app destinations.
+    const category=event.notification.data?.category==='grades'?'grades':'events';
+    const url=new URL(category==='grades'?'#grades':'#upcoming',self.registration.scope).href;
     for(const client of await self.clients.matchAll({type:'window',includeUncontrolled:true})) {
-      if(client.url.startsWith(url)) {await client.navigate(url);return client.focus();}
+      if(client.url.startsWith(self.registration.scope)) {
+        try {await client.navigate(url);return await client.focus();}catch{}
+      }
     }
     return self.clients.openWindow(url);
   })());

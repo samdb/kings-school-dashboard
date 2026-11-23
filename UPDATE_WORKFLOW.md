@@ -169,8 +169,11 @@ After the build and checks, run `python3 scripts/publish_app.py` to atomically
 publish the Home Screen app at https://agents.victorgroup.co.uk/school/ . Fetch its
 `feed.json` and compare bytes with `docs/feed.json` before claiming the app updated.
 The running `kings-school-app` service detects new/changed published items within
-one minute and sends generic push notifications to opted-in devices, updating
-badges. It deduplicates by content, not build timestamp. Do not send a second push
+one minute and sends separate generic schoolwork/marks and event notifications to
+opted-in devices. Grade/work alerts open #grades; event/term alerts open #upcoming.
+Preserve both category tags/topics and independent retries. Badges total unread items
+across both categories and only decrement for the current, live-verified grades or
+Upcoming screen. Do not restore all-category acknowledgement when one screen opens. It deduplicates by content, not build timestamp. Do not send a second push
 from this automation or create a duplicate review schedule. The app publication is
 independent of GitHub; if GitHub fails, still publish and verify the app, and report
 the mirror failure precisely. Do not rebuild/delete the private VAPID/subscription
