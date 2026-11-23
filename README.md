@@ -53,8 +53,9 @@ second school-source review schedule. `push/kings-school-app.service` documents 
 installed service. Run `npm test`, Python tests and `scripts/check_pages.cjs` after
 relevant code changes. Backend changes also require restarting that service.
 
-Brand asset: the school’s actual logo, with the existing family favicon rendered
-to Home Screen icon sizes. This is not an official school service.
+Brand assets: the school’s actual logo and its shield on navy for the Home Screen
+icons and favicon. `static/app-icon.svg` crops the original vector logo without
+redrawing it; render at 180, 192 and 512 pixels using `scripts/build_icons.cjs`. This is not an official school service.
 
 ## Run it
 

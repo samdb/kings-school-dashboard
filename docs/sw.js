@@ -14,7 +14,7 @@ self.addEventListener('push', event=>{
     // Every push displays a notification; iOS does not permit silent badge pushes.
     await self.registration.showNotification(data.test ? 'School notifications are on' : 'New school updates',{
       body:data.test ? 'Your Home Screen app is ready to receive school updates.' : 'Open the app to read the latest school information.',
-      icon:new URL('icon-192.png',self.registration.scope).href,
+      icon:new URL('icon-192.png?v=shield-1',self.registration.scope).href,
       tag:data.test ? 'school-test' : 'school-updates',
       data:{url:self.registration.scope}
     });
