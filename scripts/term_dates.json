@@ -1,0 +1,108 @@
+{
+  "school_year": "2026–27",
+  "reviewed_on": "2026-11-23",
+  "source_url": "https://kings-rochester.co.uk/admissions/term-dates/",
+  "evidence": "School term dates page, 2026–2027 tables and compulsory Saturdays read 23 November 2026. Boarder movements and Senior School Speech Day excluded. Later academic years not imported.",
+  "events": [
+    {
+      "id": "2026-27-michaelmas-training",
+      "title": "Michaelmas staff training days",
+      "event_on": "2026-09-01",
+      "summary": "Staff training before the start of term.",
+      "event_end_on": "2026-09-02"
+    },
+    {
+      "id": "2026-27-michaelmas-begins",
+      "title": "Michaelmas term begins",
+      "event_on": "2026-09-03",
+      "summary": "First day of Michaelmas term."
+    },
+    {
+      "id": "2026-27-commemoration",
+      "title": "Commemoration Day",
+      "event_on": "2026-09-12",
+      "summary": "Listed by the school as a compulsory Saturday."
+    },
+    {
+      "id": "2026-27-autumn-open-morning",
+      "title": "Whole School Open Morning",
+      "event_on": "2026-09-26",
+      "summary": "Listed by the school as a compulsory Saturday."
+    },
+    {
+      "id": "2026-27-michaelmas-half-term",
+      "title": "Michaelmas half-term",
+      "event_on": "2026-10-19",
+      "summary": "Half-term break.",
+      "event_end_on": "2026-10-30"
+    },
+    {
+      "id": "2026-27-michaelmas-ends",
+      "title": "Michaelmas term ends",
+      "event_on": "2026-12-11",
+      "summary": "Last day of Michaelmas term."
+    },
+    {
+      "id": "2026-27-lent-training",
+      "title": "Lent staff training day",
+      "event_on": "2027-01-04",
+      "summary": "Staff training before the start of term."
+    },
+    {
+      "id": "2026-27-lent-begins",
+      "title": "Lent term begins",
+      "event_on": "2027-01-05",
+      "summary": "First day of Lent term."
+    },
+    {
+      "id": "2026-27-lent-half-term",
+      "title": "Lent half-term",
+      "event_on": "2027-02-15",
+      "summary": "Half-term break.",
+      "event_end_on": "2027-02-19"
+    },
+    {
+      "id": "2026-27-lent-ends",
+      "title": "Lent term ends",
+      "event_on": "2027-03-25",
+      "summary": "Last day of Lent term."
+    },
+    {
+      "id": "2026-27-midsummer-training",
+      "title": "Midsummer staff training day",
+      "event_on": "2027-04-16",
+      "summary": "Staff training before the start of term."
+    },
+    {
+      "id": "2026-27-midsummer-begins",
+      "title": "Midsummer term begins",
+      "event_on": "2027-04-19",
+      "summary": "First day of Midsummer term."
+    },
+    {
+      "id": "2026-27-may-bank-holiday",
+      "title": "Early May bank holiday",
+      "event_on": "2027-05-03",
+      "summary": "No school."
+    },
+    {
+      "id": "2026-27-summer-open-morning",
+      "title": "Whole School Open Morning",
+      "event_on": "2027-05-08",
+      "summary": "Listed by the school as a compulsory Saturday."
+    },
+    {
+      "id": "2026-27-midsummer-half-term",
+      "title": "Midsummer half-term",
+      "event_on": "2027-05-31",
+      "summary": "Half-term break.",
+      "event_end_on": "2027-06-04"
+    },
+    {
+      "id": "2026-27-midsummer-ends",
+      "title": "Midsummer term ends",
+      "event_on": "2027-07-09",
+      "summary": "Last day of Midsummer term."
+    }
+  ]
+}

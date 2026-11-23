@@ -15,9 +15,10 @@ function save(file,value) {
 function versions(feed, today=new Date().toLocaleDateString('en-CA',{timeZone:'Europe/London'})) {
   const result={};
   for(const item of feed.items) {
-    if(item.subject.startsWith('Past event:') || item.expires_on && item.expires_on<today || item.event_on && item.event_on<today) continue;
+    if(item.subject.startsWith('Past event:') || item.expires_on && item.expires_on<today || item.event_on && (item.event_end_on||item.event_on)<today) continue;
     const fields=[item.subject,item.excerpt,item.points||[],item.event_on||null,item.tags||[],item.links||[]];
     if(item.images?.length || item.teacher_comment) fields.push(item.images||[],item.teacher_comment||'');
+    if(item.event_end_on) fields.push(item.event_end_on);
     result[item.key]=sha(JSON.stringify(fields));
   }
   return result;

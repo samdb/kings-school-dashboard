@@ -55,7 +55,7 @@ truncation and incomplete source reviews explicitly; do not infer no relevance.
 
 ## Current presentation and family facts (Sam, 23 November 2026)
 
-Main page: upcoming events and reviewed schoolwork/grades, including marked work without a score. Keep undated policies and
+Main screen: Upcoming only. A menu opens separate Schoolwork & grades (including marked work without a score), Term dates, Past events and App settings screens. Do not restore the term-date sidebar or school-calendar header panel. Keep undated policies and
 club enrolment history in the underlying records, not the main feed. Sam confirmed
 Tuesday choir and ended Friday LAMDA; `scripts/family_updates.json` takes precedence
 over old school emails. Do not reintroduce the unconfirmed choir-offer card.
@@ -76,7 +76,22 @@ Tuesday Choir is confirmed directly by Sam on 23 November; Friday LAMDA is no lo
 attendance, completion, payment, or acceptance. Extract exact dates, times, venues,
 arrangements, requested actions and genuine deadlines. Use current Europe/London
 date. Expire event-only updates after the last relevant event; retain ongoing policies.
-Check current official term dates if editing the date panel; remove past dates.
+Retain reviewed dated events in the generated feed after they pass. The UI moves them
+from Upcoming to Past events (newest first) using event dates, never receipt dates or
+an assumption of attendance. Preserve source links and teacher comments in history.
+Do not turn undated notices into dated events. The archive is not a full historical import.
+
+`scripts/term_dates.json` is the reviewed school-calendar source: 16 relevant 2026–27
+entries were verified at https://kings-rochester.co.uk/admissions/term-dates/ on
+23 November. Check that official source during recurring reviews, merge actual date
+changes/new published academic years with stable row IDs, and record the check date
+only after reading it. Never overwrite last-good dates on a fetch failure. Exclude
+boarder-only movements and Senior School-only events. Investigate inconsistent future
+calendar dates rather than guessing. `kingsdash/calendar.py` generates kind=term
+feed entries from this file; the same entries populate Term dates and Upcoming/Past,
+so there are no separately hard-coded date panels. Preserve multi-day ranges with
+explicit event_end_on; they become past only after the final day. Avoid build churn
+for unchanged calendar checks.
 
 For every processed source key, merge a record into **private** `data/reviews.json`:
 

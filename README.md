@@ -220,14 +220,21 @@ data/                  (gitignored) config.json, state.json, marks.json
 reviewed summaries from the private local data and writes `docs/`. The local
 Gmail application in `static/` is separate. Do not edit generated `docs/` files alone.
 
-The published page shows upcoming events in event-date order, soonest first,
-and checked grades newest first. Explicit `event_on` dates are not inferred from
+Upcoming is the default screen, in event-date order, soonest first. The header menu
+opens Schoolwork & grades, Term dates, Past events and App settings. Grades retain
+their checked images and lightboxes. Reviewed events remain in the feed and move
+to Past events newest first; that history does not imply attendance.
+
+`scripts/term_dates.json` is the reviewed 2026–27 school calendar, verified on
+23 November 2026. `kingsdash/calendar.py` exports its 16 relevant entries into the
+same feed used by Upcoming and Term dates. Multi-day breaks stay current until
+their final day. Boarder-only movements and Senior School Speech Day are excluded. Explicit `event_on` dates are not inferred from
 receipt or expiry. Notice receipt dates remain source footnotes. There are no
 per-item task controls or hidden/done states. Notification acknowledgement affects
 only the app badge, never content visibility. Generated assets have versioned URLs.
 
-Term dates were checked on 14 October 2026 against
-https://kings-rochester.co.uk/admissions/term-dates/ . They require editorial updates.
+Term-date source: https://kings-rochester.co.uk/admissions/term-dates/ . The existing
+four-hourly source-review workflow checks this page; changes need source verification.
 Email and attachment coverage is still incomplete; the redesign does not resolve it.
 
 Browser regression check (requires an existing Playwright installation):

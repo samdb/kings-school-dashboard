@@ -88,3 +88,14 @@ test('service worker shows visible notification, gets current badge, and safely 
  assert.equal(notices.length,1);assert.deepEqual(badges,[2]);
  handlers.notificationclick({notification:{close:()=>{}},waitUntil:p=>work=p});await work;assert.deepEqual(opened,['https://example.test/school/']);
 });
+
+test('calendar ranges remain current through their end; archived events do not notify',()=>{
+ const range={...item('half-term'),event_on:'2026-11-20',event_end_on:'2026-11-24',expires_on:'2026-11-24',kind:'term'};
+ const state={devices:{d:{pending:{},needsSend:false}}};
+ reconcile(state,feed('first',[range]),'2026-11-23');
+ assert(state.versions['half-term']);
+ const archived={...item('old-notice'),event_on:'2026-10-16'};
+ assert.deepEqual(reconcile(state,feed('archive',[range,archived]),'2026-11-23'),[]);
+ assert.deepEqual(reconcile(state,feed('ended',[range,archived]),'2026-11-25'),[]);
+ assert.deepEqual(state.versions,{});
+});

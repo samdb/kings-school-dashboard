@@ -2,7 +2,26 @@
 (function () {
   'use strict';
   const dateFormat = new Intl.DateTimeFormat('en-GB', {day:'numeric',month:'short',year:'numeric',timeZone:'Europe/London'});
-  const eventFormat = new Intl.DateTimeFormat('en-GB', {weekday:'long',day:'numeric',month:'long',timeZone:'Europe/London'});
+  const eventFormat = new Intl.DateTimeFormat('en-GB', {weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:'Europe/London'});
+  const todayInLondon=()=>new Date().toLocaleDateString('en-CA',{timeZone:'Europe/London'});
+  const titles={upcoming:'Upcoming',grades:'Schoolwork & grades','term-dates':'Term dates','past-events':'Past events',settings:'App settings'};
+  const menu=document.getElementById('site-menu');
+  const menuToggle=document.getElementById('menu-toggle');
+  function closeMenu(focus=false) {menu.hidden=true;menuToggle.setAttribute('aria-expanded','false');if(focus)menuToggle.focus();}
+  menuToggle.addEventListener('click',()=>{menu.hidden=!menu.hidden;menuToggle.setAttribute('aria-expanded',String(!menu.hidden));});
+  document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!menu.hidden)closeMenu(true);});
+  document.addEventListener('click',event=>{if(!event.target.closest('.menu-container'))closeMenu();});
+  function route(focus=false) {
+    const requested=location.hash.slice(1);
+    const view=Object.hasOwn(titles,requested)?requested:'upcoming';
+    document.querySelectorAll('[data-screen]').forEach(screen=>{screen.hidden=screen.dataset.screen!==view;});
+    menu.querySelectorAll('[data-view]').forEach(link=>{if(link.dataset.view===view)link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');});
+    document.getElementById('page-title').textContent=titles[view];
+    document.title=titles[view]+' · Blake’s school updates';
+    if(lightbox.open)lightbox.close();
+    closeMenu();
+    if(focus){document.getElementById('page-title').focus({preventScroll:true});window.scrollTo(0,0);}
+  }
   function node(tag, cls, text) {const e=document.createElement(tag);if(cls)e.className=cls;if(text)e.textContent=text;return e;}
   const lightbox=node('dialog','work-lightbox');lightbox.setAttribute('aria-labelledby','work-image-title');
   const lightboxTitle=node('h2','','Schoolwork');lightboxTitle.id='work-image-title';
@@ -12,6 +31,9 @@
   const stage=node('div','lightbox-stage');const fullImage=node('img');stage.append(fullImage);
   const caption=node('p','lightbox-caption');lightbox.append(tools,stage,caption);document.body.append(lightbox);
   let imageOpener;
+  window.addEventListener('hashchange',()=>{if(location.hash!=='#main-content')route(true);});
+  menu.addEventListener('click',event=>{if(event.target.closest('[data-view]')?.hash===location.hash)route(true);});
+  route();
   close.addEventListener('click',()=>lightbox.close());
   lightbox.addEventListener('click',event=>{if(event.target===lightbox){const r=lightbox.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)lightbox.close();}});
   zoom.addEventListener('click',()=>{const enlarged=stage.classList.toggle('is-zoomed');zoom.textContent=enlarged?'Fit image':'Zoom in';zoom.setAttribute('aria-pressed',String(enlarged));stage.scrollLeft=enlarged?(stage.scrollWidth-stage.clientWidth)/2:0;stage.scrollTop=enlarged?(stage.scrollHeight-stage.clientHeight)/2:0;});
@@ -26,6 +48,7 @@
     if(item.event_on) {
       const time=node('time','event-date',eventFormat.format(new Date(item.event_on+'T12:00:00Z')));
       time.dateTime=item.event_on;article.append(time);
+      if(item.event_end_on && item.event_end_on!==item.event_on)time.append(document.createTextNode(' – '+eventFormat.format(new Date(item.event_end_on+'T12:00:00Z'))));
     }
     article.append(node('h3','',item.subject.startsWith('School newsletter') ? 'School newsletter' : item.subject),node('p','',item.excerpt));
     if(item.tags?.length) {
@@ -64,20 +87,29 @@
       const source=node('a','text-link','Open Seesaw ↗');source.href=item.source_url;source.target='_blank';source.rel='noopener noreferrer';
       const links=node('div','card-actions');links.append(source);article.append(links);
     }
-    const note=node('p','source-note',item.source_url==='https://app.seesaw.me/#/family/feed' ? 'Posted on Seesaw ' : 'Notice received ');
-    const received=node('time','',dateFormat.format(new Date(item.received_at)));
-    received.dateTime=item.received_at;note.append(received);article.append(note);
+    const calendar=item.kind==='term';
+    const note=node('p','source-note',calendar?'School calendar checked ':item.source_url==='https://app.seesaw.me/#/family/feed' ? 'Posted on Seesaw ' : 'Notice received ');
+    const sourceDate=calendar?item.reviewed_on:item.received_at;
+    const received=node('time','',dateFormat.format(new Date(sourceDate)));
+    received.dateTime=sourceDate;note.append(received);article.append(note);
     return article;
   }
   function render(feed) {
-    const today=new Date().toLocaleDateString('en-CA',{timeZone:'Europe/London'});
-    const items=feed.items.filter(item=>!item.subject.startsWith('Past event:') && (!item.expires_on || item.expires_on>=today) && (!item.event_on || item.event_on>=today));
-    const upcoming=items.filter(item=>item.event_on && !['grade','work'].includes(item.kind)).sort((a,b)=>a.event_on.localeCompare(b.event_on)||a.subject.localeCompare(b.subject));
-    const grades=items.filter(item=>['grade','work'].includes(item.kind)).sort((a,b)=>b.received_at.localeCompare(a.received_at));
+    const today=todayInLondon();
+    renderedDay=today;
+    const events=feed.items.filter(item=>item.event_on && !['grade','work'].includes(item.kind));
+    const end=item=>item.event_end_on||item.event_on;
+    const upcoming=events.filter(item=>end(item)>=today && (!item.expires_on || item.expires_on>=today)).sort((a,b)=>a.event_on.localeCompare(b.event_on)||a.subject.localeCompare(b.subject));
+    const past=events.filter(item=>end(item)<today).sort((a,b)=>b.event_on.localeCompare(a.event_on)||a.subject.localeCompare(b.subject));
+    const terms=events.filter(item=>item.kind==='term').sort((a,b)=>a.event_on.localeCompare(b.event_on));
+    const grades=feed.items.filter(item=>['grade','work'].includes(item.kind)).sort((a,b)=>b.received_at.localeCompare(a.received_at));
     document.getElementById('coverage-note').textContent=feed.coverage_text;
     document.getElementById('result-count').textContent='';
     document.getElementById('feed').replaceChildren(...(upcoming.length ? upcoming.map(card) : [node('p','update-note','No upcoming dated notices have been reviewed yet.')]));
     document.getElementById('grades-feed').replaceChildren(...(grades.length ? grades.map(card) : [node('p','update-note','No schoolwork or grades have been reviewed yet.')]));
+    document.getElementById('past-feed').replaceChildren(...(past.length?past.map(card):[node('p','update-note','No past dated notices have been reviewed yet.')]));
+    document.getElementById('term-dates-feed').replaceChildren(...(terms.length?terms.map(card):[node('p','update-note','Term dates have not been reviewed yet.')]));
+    document.getElementById('term-dates-note').textContent=(feed.calendar_year?feed.calendar_year+' academic year. ':'')+'Term dates also appear in Upcoming and move to Past events once they have passed.';
     document.getElementById('snapshot-date').textContent='Updated '+dateFormat.format(new Date(feed.generated_at))+'.';
     window.schoolRenderedRevision=feed.revision;
     window.dispatchEvent(new Event('school-rendered'));
@@ -88,7 +120,9 @@
   const status=document.getElementById('refresh-status');
   const message=document.getElementById('refresh-message');
   const retry=document.getElementById('refresh-retry');
-  let current, pending;
+  let current, pending, renderedDay;
+  // Move dates into the past even if the app stays open across midnight.
+  setInterval(()=>{if(current && renderedDay!==todayInLondon())render(current);},60000);
   function valid(feed) {return feed && Array.isArray(feed.items) && typeof feed.revision==='string' && Number.isFinite(Date.parse(feed.generated_at));}
   function state(text,busy=false,failed=false) {
     message.textContent=text;status.setAttribute('aria-busy',String(busy));retry.hidden=!failed;
