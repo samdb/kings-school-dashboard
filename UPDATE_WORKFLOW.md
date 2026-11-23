@@ -16,6 +16,31 @@ evidence, not scheduler cursors. Scheduler dedup/notification state stays in scr
 
 ## 2. Review the underlying sources
 
+### Seesaw family feed
+
+As of 23 November 20:36 UTC, the managed `openclaw` browser profile is signed in
+to Sam's family account at https://app.seesaw.me/#/family/feed (tab label `seesaw`).
+Check that session on each review; reuse it rather than attempting Google login.
+Password plus emailed verification succeeded; credentials remain in the protected
+store. Never print/retrieve the password, publish signed image URLs or share tokens.
+If the session expires, report the exact blocker; do not mark the feed checked.
+
+Review newest announcements and Blake-only images, then use **Show More** to
+continue older backlog. Open the post and download/view its full-size original
+privately under `data/documents/seesaw/`; do not infer grades from thumbnail ticks.
+Keep post ID and posted timestamp in private sources; use stable keys
+`seesaw-<item_id>` in sources.json and reviews.json for dedup. Source URL for public
+cards is only the ordinary authenticated feed URL above, never a share/access link.
+Mixed-recipient announcements may supply Blake's arrangements, but omit other
+children's names. Record incomplete image/homework reviews as incomplete.
+
+Initial verified batch: Nativity narrator/costume post of 23 November 11:40 and
+Blake's 19 November spelling image (4/5 “Good!”, 5/5 “Fab!”, “busily” corrected).
+19 and 23 November whiteboard images have ticks but no explicit grade: reviewed,
+not graded. The nine initially visible posts are indexed privately in sources.json;
+the two homework images, older posts below Show More and historical grades remain
+unreviewed. Do not claim a full import or scheduled success from this first batch.
+
 Start with newest material, then backlog. Each queue entry contains the email text,
 all HTML links/image URLs, and downloaded MIME attachments. Downloads are UNREAD.
 Read PDFs using the PDF tool (inspect image-only pages too), image notices using

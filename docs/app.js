@@ -30,7 +30,11 @@
       source.setAttribute('aria-label','Read the school email: '+item.subject+' (opens Gmail)');
       const links=node('div','card-actions');links.append(source);article.append(links);
     }
-    const note=node('p','source-note','Notice received ');
+    if(item.source_url==='https://app.seesaw.me/#/family/feed') {
+      const source=node('a','text-link','Open Seesaw ↗');source.href=item.source_url;source.target='_blank';source.rel='noopener noreferrer';
+      const links=node('div','card-actions');links.append(source);article.append(links);
+    }
+    const note=node('p','source-note',item.source_url==='https://app.seesaw.me/#/family/feed' ? 'Posted on Seesaw ' : 'Notice received ');
     const received=node('time','',dateFormat.format(new Date(item.received_at)));
     received.dateTime=item.received_at;note.append(received);article.append(note);
     return article;
@@ -43,7 +47,7 @@
     document.getElementById('coverage-note').textContent=feed.coverage_text;
     document.getElementById('result-count').textContent='';
     document.getElementById('feed').replaceChildren(...(upcoming.length ? upcoming.map(card) : [node('p','update-note','No upcoming dated notices have been reviewed yet.')]));
-    if(grades.length) document.getElementById('grades-feed').replaceChildren(...grades.map(card));
+    document.getElementById('grades-feed').replaceChildren(...(grades.length ? grades.map(card) : [node('p','update-note','No grades have been reviewed yet.')]));
     document.getElementById('snapshot-date').textContent='Updated '+dateFormat.format(new Date(feed.generated_at))+'.';
     window.schoolRenderedRevision=feed.revision;
     window.dispatchEvent(new Event('school-rendered'));

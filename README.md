@@ -20,7 +20,8 @@ allow the system prompt. **Send a test notification** verifies real-device deliv
 This last device step cannot be verified by server tests alone.
 
 The main page contains **upcoming events and reviewed grades only**, as requested
-by Sam on 23 November. Grades are not yet populated: Seesaw access is pending.
+by Sam on 23 November. Seesaw family access is established and the first checked
+spelling results are published; historical grades and other posts still need review.
 Regular clubs and general policy notices are no longer shown. Sam’s current club
 corrections remain in `scripts/family_updates.json`: Friday LAMDA ended; choir is
 confirmed on Tuesdays. Do not overwrite these with the older enrolment/offer emails.
