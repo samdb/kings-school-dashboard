@@ -53,3 +53,10 @@ class PublicationTests(unittest.TestCase):
             candidate = dict(r, images=[dict(image, **changes)])
             self.assertEqual(approved_reviews({'key':candidate})['key']['images'], [])
         self.assertEqual(approved_reviews({'key':dict(r, child='Another child')}), {})
+
+    def test_reviewed_date_ranges_survive_export_and_invalid_ranges_fail_closed(self):
+        r = dict(self.review(), event_on='2026-12-07', event_end_on='2026-12-11')
+        self.assertEqual(approved_reviews({'key': r})['key']['event_end_on'], '2026-12-11')
+        for change in ({'event_end_on': '2026-12-06'}, {'event_end_on': '20261211'},
+                       {'event_end_on': '2026-02-30'}, {'event_on': None}):
+            self.assertEqual(approved_reviews({'key': dict(r, **change)}), {})

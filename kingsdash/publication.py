@@ -23,13 +23,17 @@ def approved_reviews(reviews):
             if review.get('event_on'):
                 if date.fromisoformat(review['event_on']).isoformat() != review['event_on']:
                     continue
+            if review.get('event_end_on'):
+                end = date.fromisoformat(review['event_end_on'])
+                if end.isoformat() != review['event_end_on'] or not review.get('event_on') or end < date.fromisoformat(review['event_on']):
+                    continue
         except (KeyError, ValueError, TypeError):
             continue
         if not all(isinstance(review.get(k), str) and review[k].strip() for k in ('title', 'summary')):
             continue
         if not isinstance(review.get('points', []), list) or not all(isinstance(p, str) for p in review.get('points', [])):
             continue
-        clean = {k: review[k] for k in ('title', 'summary', 'points', 'reviewed_on', 'expires_on', 'event_on') if k in review}
+        clean = {k: review[k] for k in ('title', 'summary', 'points', 'reviewed_on', 'expires_on', 'event_on', 'event_end_on') if k in review}
         if review.get('kind') in ('grade', 'work'):
             # Sam authorised Blake's reviewed grades, marked work and images, 23 Nov.
             if review.get('child') != 'Blake':

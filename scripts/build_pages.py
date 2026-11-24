@@ -74,6 +74,8 @@ for source in source_items.values():
         item['reviewed_on'] = review['reviewed_on']
         item['expires_on'] = review.get('expires_on')
         item['event_on'] = review.get('event_on')
+        if review.get('event_end_on'):
+            item['event_end_on'] = review['event_end_on']
         item['tags'] = review.get('tags', [])
         item['kind'] = review.get('kind', 'event')
         if review.get('teacher_comment'):
