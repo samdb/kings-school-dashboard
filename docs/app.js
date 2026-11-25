@@ -96,9 +96,22 @@
     received.dateTime=sourceDate;note.append(received);article.append(note);
     return article;
   }
+  function renderSourceStatus(feed) {
+    const source=feed.source_health?.seesaw;
+    const checked=Date.parse(source?.checked_at), reviewed=Date.parse(source?.last_reviewed_at);
+    const recent=value=>Number.isFinite(value)&&Date.now()-value>=-300000&&Date.now()-value<8*60*60*1000;
+    let text='';
+    if(['sign_in_required','verification_required','unavailable'].includes(source?.status))
+      text='Seesaw updates are paused. Newer posts have not been checked.';
+    else if(!recent(checked)||!recent(reviewed)||source?.status!=='available')
+      text='Recent Seesaw posts have not yet been checked.';
+    if(text && Number.isFinite(reviewed))text+=' Last feed review: '+dateFormat.format(new Date(reviewed))+'.';
+    document.getElementById('source-status').textContent=text;
+  }
   function render(feed) {
     const today=todayInLondon();
     renderedDay=today;
+    renderSourceStatus(feed);
     const events=feed.items.filter(item=>item.event_on && !['grade','work'].includes(item.kind));
     const end=item=>item.event_end_on||item.event_on;
     const upcoming=events.filter(item=>end(item)>=today && (!item.expires_on || item.expires_on>=today)).sort((a,b)=>a.event_on.localeCompare(b.event_on)||a.subject.localeCompare(b.subject));
@@ -124,7 +137,7 @@
   const retry=document.getElementById('refresh-retry');
   let current, pending, renderedDay;
   // Move dates into the past even if the app stays open across midnight.
-  setInterval(()=>{if(current && renderedDay!==todayInLondon())render(current);},60000);
+  setInterval(()=>{if(current){renderSourceStatus(current);if(renderedDay!==todayInLondon())render(current);}},60000);
   function valid(feed) {return feed && Array.isArray(feed.items) && typeof feed.revision==='string' && Number.isFinite(Date.parse(feed.generated_at));}
   function state(text,busy=false,failed=false) {
     message.textContent=text;status.setAttribute('aria-busy',String(busy));retry.hidden=!failed;
@@ -146,7 +159,7 @@
         current=feed;
         try {localStorage.setItem(savedKey,JSON.stringify(feed));}catch{}
         window.schoolFreshRevision=feed.revision;
-        state('Up to date');
+        state('Published updates loaded');
         window.dispatchEvent(new Event('school-rendered'));
       } catch {
         state(navigator.onLine?'Couldn’t check for updates. Showing saved content.':'Offline · showing saved content.',false,true);

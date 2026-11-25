@@ -35,7 +35,9 @@ schoolwork images, including work with ticks but no score; these open in accessi
 lightboxes. Only individually approved images enter the public media allowlist. Keep source evidence private.
 
 The app uses the existing server and the open-source `web-push` package, without
-paid services or third-party analytics. Push text is generic (no grades or names).
+paid services or third-party analytics. Routine push text is generic (no grades or names).
+An explicitly requested test can include a reviewed result in its `body` (up to
+240 characters); this does not change routine alerts or fixed tap destinations.
 Each publication produces up to one alert per changed category: grade/work items
 use **New schoolwork & marks** and open `#grades`; dated events and term dates use
 **New school events** and open `#upcoming`. Tags and Web Push topics are separate

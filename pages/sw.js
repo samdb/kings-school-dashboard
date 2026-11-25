@@ -63,7 +63,10 @@ self.addEventListener('push', event=>{
     } catch {}
     // Every push displays a notification; iOS does not permit silent badge pushes.
     await self.registration.showNotification(data.test ? (category==='grades'?'Schoolwork notification test':'Event notification test') : (category==='grades'?'New schoolwork & marks':'New school events'),{
-      body:category==='grades'?'Open Schoolwork & grades to see the update.':'Open Upcoming to see the update.',
+      // A user-requested test may include a result; routine alerts remain generic.
+      body:data.test===true && typeof data.body==='string' && data.body.trim()
+        ? data.body.trim().slice(0,240)
+        : (category==='grades'?'Open Schoolwork & grades to see the update.':'Open Upcoming to see the update.'),
       icon:new URL('icon-192.png?v=shield-1',self.registration.scope).href,
       tag:(data.test?'school-test-':'school-')+category,
       data:{category}

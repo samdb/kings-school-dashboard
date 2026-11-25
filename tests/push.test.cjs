@@ -163,4 +163,16 @@ test('notification categories use different tags and route both cold and existin
  clients=[{url:'https://example.test/school/#upcoming',navigate:async()=>{throw Error('closed');}}];
  handlers.notificationclick({notification:{data:{category:'grades'},close:()=>{}},waitUntil:p=>work=p});await work;
  assert.equal(opened.at(-1),'https://example.test/school/#grades');
+ const result='Spelling · 19 November: 4/5 (“Good!”) and 5/5 (“Fab!”).';
+ for(const payload of [
+  {test:true,category:'grades',body:result},
+  {category:'grades',body:result},
+  {test:true,category:'grades',body:{invalid:true}},
+  {test:true,category:'grades',body:'x'.repeat(300)}
+ ]) {handlers.push({data:{json:()=>payload},waitUntil:p=>work=p});await work;}
+ assert.deepEqual(notices.slice(-4).map(n=>n[1].body),[
+  result,'Open Schoolwork & grades to see the update.',
+  'Open Schoolwork & grades to see the update.','x'.repeat(240)
+ ]);
+ assert.equal(notices.at(-4)[1].data.category,'grades');
 });

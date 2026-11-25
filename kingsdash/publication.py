@@ -71,3 +71,23 @@ def coverage_note(status):
     if status.get('mail_ok'):
         return 'School email is checked every four hours. Only reviewed information is shown.'
     return 'Previously reviewed information is shown. Other attachments and parent-portal letters have not yet been reviewed.'
+
+
+def source_health(evidence):
+    """Export a fixed, non-sensitive source-status schema; no diagnostic prose."""
+    from datetime import datetime
+    result = {}
+    for name in ('seesaw',):
+        entry = evidence.get(name, {})
+        state = entry.get('status')
+        clean = {'status': state if state in ('available', 'sign_in_required', 'verification_required', 'unavailable') else 'unknown'}
+        for field in ('checked_at', 'last_reviewed_at'):
+            try:
+                value = entry[field]
+                parsed = datetime.fromisoformat(value.replace('Z', '+00:00'))
+                if parsed.tzinfo is not None:
+                    clean[field] = parsed.isoformat()
+            except (KeyError, ValueError, TypeError, AttributeError):
+                pass
+        result[name] = clean
+    return result

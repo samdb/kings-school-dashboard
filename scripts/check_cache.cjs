@@ -18,7 +18,7 @@ const {createApp}=require('../push/server.cjs');
       return setTimeout(()=>{
         if(failure){res.writeHead(503);return res.end();}
         const feed=JSON.parse(fs.readFileSync(path.join(docs,'feed.json')));
-        if(changed){feed.revision='test-new-publication';feed.generated_at='2099-01-01T00:00:00Z';feed.items.find(i=>i.event_on).subject='New publication test';}
+        if(changed){feed.revision='test-new-publication';feed.generated_at='2099-01-01T00:00:00Z';const item=feed.items.find(i=>i.event_on);item.subject='New publication test';item.event_on='2099-01-01';delete item.event_end_on;delete item.expires_on;}
         res.setHeader('Content-Type','application/json');res.end(JSON.stringify(feed));
       },slow?3000:0);
     }
@@ -53,7 +53,7 @@ const {createApp}=require('../push/server.cjs');
     assert.equal(await page.evaluate(()=>window.schoolFreshRevision),null);
     await page.evaluate(()=>scrollTo(0,0));
     await page.screenshot({path:'/tmp/kings-cache-updating-mobile.png'});
-    await page.waitForFunction(()=>document.querySelector('#refresh-message').textContent==='Up to date');
+    await page.waitForFunction(()=>document.querySelector('#refresh-message').textContent==='Published updates loaded');
     console.log(`Cached render: ${elapsed}ms with 3000ms delayed server`);
     slow=false;
     await context.setOffline(true);await page.reload({waitUntil:'domcontentloaded'});await page.waitForSelector('.card');
@@ -79,7 +79,7 @@ const {createApp}=require('../push/server.cjs');
     await page.waitForFunction(()=>document.querySelector('#refresh-message').textContent.includes('Couldn’t'));
     assert.equal(await page.evaluate(()=>window.schoolRenderedRevision),'test-new-publication');
     failure=false;await page.getByRole('button',{name:'Try again'}).click();
-    await page.waitForFunction(()=>document.querySelector('#refresh-message').textContent==='Up to date');
+    await page.waitForFunction(()=>document.querySelector('#refresh-message').textContent==='Published updates loaded');
     const urls=await page.evaluate(async()=>{const result=[];for(const name of await caches.keys())for(const req of await (await caches.open(name)).keys())result.push(req.url);return result;});
     assert(!urls.some(u=>u.includes('/api/')||u.endsWith('/feed.json')),'API/feed must stay network-only');
     // A mixed/corrupt deployment cannot replace the last complete offline shell.

@@ -18,12 +18,44 @@ evidence, not scheduler cursors. Scheduler dedup/notification state stays in scr
 
 ### Seesaw family feed
 
-As of 23 November 20:36 UTC, the managed `openclaw` browser profile is signed in
-to Sam's family account at https://app.seesaw.me/#/family/feed (tab label `seesaw`).
-Check that session on each review; reuse it rather than attempting Google login.
-Password plus emailed verification succeeded; credentials remain in the protected
-store. Never print/retrieve the password, publish signed image URLs or share tokens.
-If the session expires, report the exact blocker; do not mark the feed checked.
+Start every run with `node scripts/check_seesaw.cjs` before slower mail/PDF work.
+This bounded read-only preflight reuses the persistent managed browser and records
+connection evidence in private `data/source_health.json`; it never claims a review.
+An expired session is not “nothing relevant”. On `verification_required`, preserve
+the pending challenge; never navigate, resubmit credentials or attempt to solve it.
+On `sign_in_required`, inspect supported protected recovery before requiring Sam to
+sign in. Never retrieve plaintext credentials or put them into CLI arguments.
+For a sign-in-required state only: use browser UI to select Family Member, then
+run `node scripts/reconnect_seesaw.cjs` through gateway_exec with the parent email
+as SEESAW_ACCOUNT_EMAIL from private account configuration. The protected password
+is injected by the Gateway; the script forwards its opaque sentinel only through
+the approved Seesaw HTTPS host. A 200 response is NOT proof of login; inspect the
+actual UI and rerun the read-only connection check. Never run it in native exec.
+One recovery attempt only; no retry loop. Stop at a human-verification challenge.
+Record verification_required in private source_health immediately on observing a
+challenge, even if it later expires back to the login form; only actual recovery
+clears that unresolved blocker. Human path: Control UI chat → + → Browser → existing
+Seesaw Agent tab (not a local/Mac tab or the user's phone Seesaw app).
+For `unavailable`, diagnose transport/browser state and retry once if recoverable.
+Record failures, retain last-good work and publish the source-status banner even if
+there are no new cards. A recent app publication is not a recent source review.
+
+After authenticated review of the NEWEST feed through the prior reviewed cursor,
+including relevant original images and decisions for every new post, write the
+private evidence and run `python3 scripts/record_seesaw_review.py --evidence data/PATH`.
+Do not advance this timestamp for login, cached old evidence, partial reads, or
+collection alone. Older backlog remains explicitly incomplete in the source ledger.
+The recorder requires a successful connection check within the last hour. Preserve
+the last genuine feed-review time when blocked. The app independently warns after
+eight hours without a fresh check AND completed review, even if the updater stops.
+
+A new human-verification blocker needs one actionable daytime message to Sam,
+explaining that the managed browser connection (not his phone app) needs attention.
+Dedup per unresolved blocker, not a permanent “Seesaw alerted” flag. Reset the
+blocker only after authenticated recovery and actual review, and record delivery
+in this existing job's scratch. Never suppress a changed required action because
+an older generic sign-in request was already sent. Keep credentials, account IDs,
+challenge details and diagnostic prose out of public source-status exports.
 
 Review newest announcements and Blake-only images, then use **Show More** to
 continue older backlog. Open the post and download/view its full-size original
@@ -191,10 +223,20 @@ Do not commit/build churn when nothing changed. Do not modify unrelated workspac
 
 ## 4. Output and failures
 
-Routine success/no relevant change: final output exactly `NO_REPLY`. For a NEW
-urgent school action or a NEW blocker needing Sam, return only a brief useful
-notification. Never output raw mail, worker reports, scratch or operational logs.
-Use automation scratch for notification dedup and unresolved blocker tracking.
+Routine success/no relevant change: final output exactly `NO_REPLY`. Technical
+failures, retries, coverage gaps, mirror failures and publication reports belong
+in private automation scratch, not chat. A 403 or failed mirror alone is not an
+action for Sam. Finish review and scratch persistence within the scheduled run;
+do not send progress messages or announcing worker handoffs.
+
+Only a NEW urgent school action or a verified blocker requiring an action only
+Sam can take merits a notification. Use 1–2 plain-language sentences: impact and
+exact user action, without technical preamble, internal links or diagnostics.
+Observe 23:00–08:00 Europe/London quiet hours unless genuinely urgent; defer
+nonurgent requests in scratch. Deduplicate against already delivered requests,
+including the 24 November Seesaw sign-in request. Keep school-app notifications
+enabled and do not duplicate them in Telegram. Use only scheduler final delivery.
+Never output raw mail, worker reports, scratch or operational logs.
 Do not repeat the known Victor reauthorisation alert every four hours. If a run
 cannot complete, leave gaps explicit and retain last-good content. A model/runtime
 failure is handled by the scheduler failure route, not reported as a successful check.

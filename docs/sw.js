@@ -1,7 +1,7 @@
 'use strict';
 // Generated, exact allowlist of public page assets. APIs and private documents stay network-only.
-const RELEASE="71f47695b3726b7db134";
-const ASSETS={"index.html": "e26cec9feeca75d6b9ce0f006143230ea97f95b5a99ad310380b316aa7ab0f9c", "manifest.webmanifest": "634d4518f29d903a8c8aebbb512f63efc162214966ed9f16928080f921dd7542", "favicon.svg": "0b207d3e79fd89cbc1ce137be6929848bde41b9dc6d0ef397c583a30b3a8d60c", "school-logo.svg": "4764d3cd5f4b9a009d2a268eafbc4b2236182c460eb2f45316f8191653bad679", "icon-192.png?v=shield-1": "19b9b310fed7c667ec657eb1af1f6cf17b80e169b6a07942c5d636aaceae5bfa", "icon-512.png?v=shield-1": "ac4a1abbfd89436a3590c2783b0a98d8757ef22c2b1919d516b3f308e0d310d3", "apple-touch-icon.png?v=shield-1": "5c274c0a2ef92375640a5afe87b0ee42dfaacfe223a31cb386a2b092c3b47a7d", "app.css?v=d65bfebbc658": "d65bfebbc658bd4486b1b7d30be913de5dcba1cf46e92a189502e40b92b37ccd", "snapshot.js?v=13624c230335": "13624c230335d3a3fd43d91d3d0f6a7763c6c0829215cb3dfe30055f5e733b1c", "app.js?v=b9970fe964c4": "b9970fe964c4771180c950f53b78649010a1cfbda8eec8ccf7de86d428fc9e8b", "pwa.js?v=c29c74e47860": "c29c74e47860e95ab264a51daba5ae947ebe98b0156ac728a4b5bcba67d69912"};
+const RELEASE="f853e9a1cf451878f2fb";
+const ASSETS={"index.html": "f33eb8c2ac5129f1e8e3f008de7e2bd55e988b8046855550e2a6da531cfde6cb", "manifest.webmanifest": "634d4518f29d903a8c8aebbb512f63efc162214966ed9f16928080f921dd7542", "favicon.svg": "0b207d3e79fd89cbc1ce137be6929848bde41b9dc6d0ef397c583a30b3a8d60c", "school-logo.svg": "4764d3cd5f4b9a009d2a268eafbc4b2236182c460eb2f45316f8191653bad679", "icon-192.png?v=shield-1": "19b9b310fed7c667ec657eb1af1f6cf17b80e169b6a07942c5d636aaceae5bfa", "icon-512.png?v=shield-1": "ac4a1abbfd89436a3590c2783b0a98d8757ef22c2b1919d516b3f308e0d310d3", "apple-touch-icon.png?v=shield-1": "5c274c0a2ef92375640a5afe87b0ee42dfaacfe223a31cb386a2b092c3b47a7d", "app.css?v=10ac2fbc96f7": "10ac2fbc96f7e65f7e2de2c4f6cb721e948645eb0986b744e5832903a9c60b6f", "snapshot.js?v=a6d00ff41b3d": "a6d00ff41b3d051c9f15fc405e807d946166bf79d3cf7aa11997d618fecbda7b", "app.js?v=ac5cac535b62": "ac5cac535b626f002bdde0e0a826376552894e229c028b4ab60a9450bf8d973b", "pwa.js?v=c29c74e47860": "c29c74e47860e95ab264a51daba5ae947ebe98b0156ac728a4b5bcba67d69912"};
 const MEDIA=["media/827905f99831faad0b4abb87bb0b615511dfa69195d3a5c116d9ce563823369c.png", "media/e1a8b8a32e06887aedb06bd4dc580407fd2b084bc0c8bbfafdd68c8b642de3ee.jpg", "media/fd7a19bc34b1a89c72c48636c7dde2eab9b9d10126d7c85db11890d3aacb4437.jpg"];
 const prefix='school-shell:'+self.registration.scope+':';
 const cacheName=prefix+RELEASE;
@@ -63,7 +63,10 @@ self.addEventListener('push', event=>{
     } catch {}
     // Every push displays a notification; iOS does not permit silent badge pushes.
     await self.registration.showNotification(data.test ? (category==='grades'?'Schoolwork notification test':'Event notification test') : (category==='grades'?'New schoolwork & marks':'New school events'),{
-      body:category==='grades'?'Open Schoolwork & grades to see the update.':'Open Upcoming to see the update.',
+      // A user-requested test may include a result; routine alerts remain generic.
+      body:data.test===true && typeof data.body==='string' && data.body.trim()
+        ? data.body.trim().slice(0,240)
+        : (category==='grades'?'Open Schoolwork & grades to see the update.':'Open Upcoming to see the update.'),
       icon:new URL('icon-192.png?v=shield-1',self.registration.scope).href,
       tag:(data.test?'school-test-':'school-')+category,
       data:{category}

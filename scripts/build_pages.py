@@ -11,7 +11,7 @@ from kingsdash.service import Service
 from kingsdash.config import Env
 from kingsdash.matching import classify
 from kingsdash.storage import read_json
-from kingsdash.publication import approved_reviews, coverage_note
+from kingsdash.publication import approved_reviews, coverage_note, source_health
 from kingsdash.public_media import export_images
 from kingsdash.calendar import calendar_items
 
@@ -98,6 +98,7 @@ assert items
 feed = dict(mode='snapshot', connection='snapshot', profile={'child_first_name': 'Blake', 'year_group': 3}, items=items, accounts=[], refresh={'running':False}, refresh_minutes=0, last_successful_refresh=raw['last_successful_refresh'], generated_at=max((r.get('reviewed_on', '') for r in REVIEWS.values()), default='2026-10-14'), coverage_text=coverage_note(update_status))
 feed['generated_at'] = max(feed['generated_at'], calendar['reviewed_on'])
 feed['calendar_year'] = calendar['school_year']
+feed['source_health'] = source_health(read_json(str(Path(env.data_dir)/'source_health.json'), {}))
 out = ROOT/'docs'; out.mkdir(exist_ok=True)
 feed['revision'] = hashlib.sha256(json.dumps({'items': items}, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
 # Pages has its own presentation: do not rewrite the local-app UI with regexes.
